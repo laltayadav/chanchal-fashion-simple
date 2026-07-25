@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anokhi Saris</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Cormorant+Garamond:ital@1&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --maroon:#5C1A2B;
+    --maroon-deep:#3E1220;
+    --gold:#C6963A;
+    --gold-soft:#E4C88A;
+    --cream:#FBF5EA;
+    --ink:#2A1B1F;
+    --teal:#1F4B47;
+    --line: rgba(92,26,43,0.15);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--cream);color:var(--ink);font-family:'Karla',sans-serif;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.serif{font-family:'Cormorant Garamond',serif;}
+  .wrap{max-width:520px;margin:0 auto;min-height:100vh;background:var(--cream);position:relative;box-shadow:0 0 40px rgba(0,0,0,0.06);}
+  @media(min-width:560px){.wrap{margin:0 auto;}}
+
+  header.top{background:var(--maroon);color:var(--gold-soft);padding:22px 20px 26px;position:relative;overflow:hidden;}
+  header.top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:6px;
+    background:repeating-linear-gradient(90deg,var(--gold) 0 10px, transparent 10px 18px);}
+  .brand-row{display:flex;align-items:baseline;justify-content:space-between;}
+  .brand-name{font-size:32px;font-weight:700;letter-spacing:0.3px;color:#fff;margin:0;}
+  .brand-tag{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-soft);margin-top:2px;font-family:'Karla';}
+
+  nav.tabs{display:flex;border-bottom:1px solid var(--line);background:var(--cream);position:sticky;top:0;z-index:5;}
+  nav.tabs button{flex:1;padding:13px 6px;background:none;border:none;font-family:'Karla';font-size:13px;font-weight:600;letter-spacing:0.5px;color:#8a6a71;cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase;}
+  nav.tabs button.active{color:var(--maroon);border-bottom:2px solid var(--gold);}
+  nav.tabs button .count{background:var(--maroon);color:#fff;border-radius:20px;padding:1px 6px;font-size:10px;margin-left:4px;}
+
+  main{padding:16px;padding-bottom:90px;}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .card{background:#fff;border-radius:4px;overflow:hidden;border:1px solid var(--line);}
+  .card img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#eee2d0;}
+  .card-body{padding:10px 10px 12px;}
+  .card-name{font-family:'Cormorant Garamond';font-size:17px;font-weight:600;line-height:1.15;margin:0 0 4px;color:var(--maroon-deep);}
+  .card-cat{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#a08890;margin-bottom:6px;}
+  .price-row{display:flex;align-items:baseline;gap:6px;margin-bottom:8px;}
+  .price-now{font-weight:700;font-size:15px;color:var(--teal);}
+  .price-was{font-size:12px;color:#a08890;text-decoration:line-through;}
+  .discount-pill{background:var(--gold);color:#3E2A00;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;}
+  .add-btn{width:100%;padding:8px;background:var(--maroon);color:#fff;border:none;border-radius:3px;font-family:'Karla';font-weight:600;font-size:12px;letter-spacing:0.5px;cursor:pointer;text-transform:uppercase;}
+  .add-btn:active{background:var(--maroon-deep);}
+  .add-btn.in-cart{background:var(--teal);}
+
+  .empty{text-align:center;padding:60px 20px;color:#a08890;}
+  .empty .serif{font-size:22px;color:var(--maroon);margin-bottom:6px;}
+
+  /* Cart */
+  .cart-item{display:flex;gap:10px;background:#fff;border:1px solid var(--line);border-radius:4px;padding:10px;margin-bottom:10px;align-items:center;}
+  .cart-item img{width:52px;height:64px;object-fit:cover;border-radius:2px;flex-shrink:0;}
+  .cart-item-info{flex:1;min-width:0;}
+  .cart-item-info .name{font-family:'Cormorant Garamond';font-weight:600;font-size:15px;color:var(--maroon-deep);}
+  .cart-item-info .price{font-size:12px;color:var(--teal);font-weight:600;}
+  .qty-ctrl{display:flex;align-items:center;gap:8px;}
+  .qty-ctrl button{width:24px;height:24px;border-radius:50%;border:1px solid var(--maroon);background:#fff;color:var(--maroon);font-size:14px;line-height:1;cursor:pointer;}
+  .remove-x{background:none;border:none;color:#b5555f;font-size:18px;cursor:pointer;padding:0 4px;}
+
+  .form-group{margin-bottom:12px;}
+  .form-group label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#8a6a71;margin-bottom:5px;}
+  .form-group input, .form-group select, .form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:3px;font-family:'Karla';font-size:14px;background:#fff;color:var(--ink);}
+  .form-group input:focus, .form-group textarea:focus{outline:2px solid var(--gold);outline-offset:0;}
+
+  .summary-row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;}
+  .summary-row.total{font-weight:700;font-size:17px;border-top:1px solid var(--line);margin-top:6px;padding-top:10px;color:var(--maroon-deep);}
+
+  .primary-btn{width:100%;padding:14px;background:var(--maroon);color:#fff;border:none;border-radius:3px;font-family:'Karla';font-weight:700;font-size:14px;letter-spacing:0.5px;cursor:pointer;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .primary-btn:disabled{background:#c9b3b8;cursor:not-allowed;}
+  .ghost-btn{width:100%;padding:12px;background:#fff;color:var(--maroon);border:1px solid var(--maroon);border-radius:3px;font-family:'Karla';font-weight:600;font-size:13px;cursor:pointer;margin-top:8px;}
+
+  /* Admin */
+  .admin-gate{padding:60px 24px;text-align:center;}
+  .admin-section{margin-bottom:26px;}
+  .admin-section h2{font-size:20px;color:var(--maroon-deep);margin:0 0 12px;border-bottom:1px solid var(--line);padding-bottom:8px;}
+  .prod-row{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:4px;padding:8px;margin-bottom:8px;}
+  .prod-row img{width:40px;height:50px;object-fit:cover;border-radius:2px;}
+  .prod-row .pname{font-weight:600;font-size:14px;flex:1;}
+  .prod-row .pprice{font-size:12px;color:var(--teal);}
+  .icon-btn{background:none;border:none;font-size:16px;cursor:pointer;color:#8a6a71;padding:4px;}
+
+  .order-card{background:#fff;border:1px solid var(--line);border-radius:4px;padding:12px;margin-bottom:10px;}
+  .order-card .oh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .order-card .oname{font-family:'Cormorant Garamond';font-weight:700;font-size:16px;color:var(--maroon-deep);}
+  .order-card .otime{font-size:11px;color:#a08890;}
+  .order-card .ophone{font-size:13px;color:var(--teal);margin-bottom:6px;}
+  .order-card .oitems{font-size:13px;color:var(--ink);margin-bottom:8px;line-height:1.5;}
+  .status-pill{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:20px;letter-spacing:0.5px;cursor:pointer;border:none;}
+  .status-new{background:#F3D9A3;color:#5c3d00;}
+  .status-done{background:#c9dfd2;color:#1F4B47;}
+
+  .fab-cart{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--maroon);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-family:'Karla';font-weight:700;box-shadow:0 -4px 16px rgba(0,0,0,0.15);}
+
+  .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--teal);color:#fff;padding:10px 18px;border-radius:4px;font-size:13px;font-weight:600;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+
+  .filter-row{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px;}
+  .filter-chip{white-space:nowrap;padding:6px 14px;border-radius:20px;border:1px solid var(--maroon);background:#fff;color:var(--maroon);font-size:12px;font-weight:600;cursor:pointer;}
+  .filter-chip.active{background:var(--maroon);color:#fff;}
+
+  .small-link{background:none;border:none;color:#a08890;font-size:11px;text-decoration:underline;cursor:pointer;padding:0;}
+  .field-note{font-size:11px;color:#a08890;margin-top:-6px;margin-bottom:12px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const STORAGE_KEYS = { PRODUCTS: 'products-list', ORDERS: 'orders-list', CONFIG: 'shop-config' };
+let state = {
+  view: 'shop',
+  products: [],
+  orders: [],
+  config: { shopName: 'Anokhi Saris', whatsapp: '', password: 'sari123' },
+  cart: {}, // id -> qty
+  adminUnlocked: false,
+  filter: 'All',
+  loaded: false,
+  editingProduct: null,
+};
+
+function uid(){ return 'p' + Date.now() + Math.floor(Math.random()*1000); }
+
+const storageAvailable = () => typeof window.storage !== 'undefined' && window.storage !== null;
+
+async function loadAll(){
+  render(); // show loading state immediately
+
+  if(!storageAvailable()){
+    // No storage backend (e.g. opened outside the artifact host) — run fully in-memory.
+    state.products = seedProducts();
+    state.orders = [];
+    state.loaded = true;
+    render();
+    return;
+  }
+
+  try{
+    const p = await window.storage.get(STORAGE_KEYS.PRODUCTS, true);
+    state.products = (p && p.value) ? JSON.parse(p.value) : seedProducts();
+  }catch(e){ state.products = seedProducts(); }
+  try{ await window.storage.set(STORAGE_KEYS.PRODUCTS, JSON.stringify(state.products), true); }catch(e){ /* best effort */ }
+
+  try{
+    const o = await window.storage.get(STORAGE_KEYS.ORDERS, true);
+    state.orders = (o && o.value) ? JSON.parse(o.value) : [];
+  }catch(e){ state.orders = []; }
+
+  try{
+    const c = await window.storage.get(STORAGE_KEYS.CONFIG, true);
+    if(c && c.value) state.config = JSON.parse(c.value);
+    else await window.storage.set(STORAGE_KEYS.CONFIG, JSON.stringify(state.config), true);
+  }catch(e){ /* keep default config */ }
+
+  state.loaded = true;
+  render();
+}
+
+function seedProducts(){
+  return [
+    { id: uid(), name:'Banarasi Silk — Wine Red', category:'Silk', price:4500, discount:3800, image:'https://images.unsplash.com/photo-1610030181087-540965ecca9b?w=400' },
+    { id: uid(), name:'Kanjivaram — Peacock Blue', category:'Silk', price:6200, discount:0, image:'https://images.unsplash.com/photo-1610189844429-ba79dfa19a12?w=400' },
+    { id: uid(), name:'Cotton Handloom — Mustard', category:'Cotton', price:1800, discount:1500, image:'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400' },
+    { id: uid(), name:'Chiffon Party Wear — Emerald', category:'Chiffon', price:2600, discount:0, image:'https://images.unsplash.com/photo-1610030182234-2f3c56e05dc3?w=400' },
+  ];
+}
+
+async function saveProducts(){ await window.storage.set(STORAGE_KEYS.PRODUCTS, JSON.stringify(state.products), true); }
+async function saveOrders(){ await window.storage.set(STORAGE_KEYS.ORDERS, JSON.stringify(state.orders), true); }
+async function saveConfig(){ await window.storage.set(STORAGE_KEYS.CONFIG, JSON.stringify(state.config), true); }
+
+function money(n){ return '₹' + Number(n).toLocaleString('en-IN'); }
+
+function cartCount(){ return Object.values(state.cart).reduce((a,b)=>a+b,0); }
+function cartTotal(){
+  let t = 0;
+  for(const id in state.cart){
+    const p = state.products.find(x=>x.id===id);
+    if(p) t += (p.discount>0?p.discount:p.price) * state.cart[id];
+  }
+  return t;
+}
+
+function showToast(msg){
+  const t = document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2200);
+}
+
+function setView(v){ state.view = v; render(); }
+
+function addToCart(id){
+  state.cart[id] = (state.cart[id]||0) + 1;
+  render();
+}
+function decFromCart(id){
+  if(!state.cart[id]) return;
+  state.cart[id] -= 1;
+  if(state.cart[id]<=0) delete state.cart[id];
+  render();
+}
+function removeFromCart(id){ delete state.cart[id]; render(); }
+
+async function submitOrder(name, phone, note){
+  const items = Object.keys(state.cart).map(id=>{
+    const p = state.products.find(x=>x.id===id);
+    return p ? { name:p.name, qty:state.cart[id], price:(p.discount>0?p.discount:p.price) } : null;
+  }).filter(Boolean);
+
+  const order = {
+    id: uid(),
+    name, phone, note: note||'',
+    items,
+    total: cartTotal(),
+    status: 'new',
+    time: new Date().toISOString(),
+  };
+  state.orders.unshift(order);
+  await saveOrders();
+
+  const lines = items.map(it=>`• ${it.name} x${it.qty} — ${money(it.price)}`).join('\n');
+  const msg = `New order from ${name} (${phone})\n\n${lines}\n\nTotal: ${money(order.total)}${note?`\nNote: ${note}`:''}`;
+  const waNumber = (state.config.whatsapp||'').replace(/[^0-9]/g,'');
+  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
+
+  state.cart = {};
+  render();
+  showToast('Order saved! Opening WhatsApp…');
+  if(waNumber){ setTimeout(()=>window.open(waUrl, '_blank'), 500); }
+  else { showToast('Add your WhatsApp number in Admin settings to enable notifications.'); }
+}
+
+// ---------- RENDER ----------
+function render(){
+  const app = document.getElementById('app');
+  if(!state.loaded){ app.innerHTML = `<div style="padding:60px;text-align:center;color:#a08890;">Loading…</div>`; return; }
+
+  let html = `
+    <header class="top">
+      <div class="brand-row">
+        <h1 class="brand-name">${state.config.shopName}</h1>
+      </div>
+      <div class="brand-tag">Handpicked Saris, Delivered with Care</div>
+    </header>
+    <nav class="tabs">
+      <button class="${state.view==='shop'?'active':''}" onclick="setView('shop')">Shop</button>
+      <button class="${state.view==='cart'?'active':''}" onclick="setView('cart')">Cart ${cartCount()>0?`<span class="count">${cartCount()}</span>`:''}</button>
+      <button class="${state.view==='admin'?'active':''}" onclick="setView('admin')">Admin</button>
+    </nav>
+    <main>
+  `;
+
+  if(state.view==='shop') html += renderShop();
+  if(state.view==='cart') html += renderCart();
+  if(state.view==='admin') html += renderAdmin();
+
+  html += `</main>`;
+
+  if(state.view!=='cart' && cartCount()>0){
+    html += `<div class="fab-cart" onclick="setView('cart')"><span>View Order (${cartCount()} item${cartCount()>1?'s':''})</span><span>${money(cartTotal())}</span></div>`;
+  }
+
+  app.innerHTML = html;
+}
+
+function renderShop(){
+  const cats = ['All', ...new Set(state.products.map(p=>p.category))];
+  const filtered = state.filter==='All' ? state.products : state.products.filter(p=>p.category===state.filter);
+
+  let html = `<div class="filter-row">`;
+  cats.forEach(c=>{
+    html += `<button class="filter-chip ${state.filter===c?'active':''}" onclick="state.filter='${c}';render()">${c}</button>`;
+  });
+  html += `</div>`;
+
+  if(filtered.length===0){
+    html += `<div class="empty"><div class="serif">No saris yet</div>Add your first piece from the Admin tab.</div>`;
+    return html;
+  }
+
+  html += `<div class="grid">`;
+  filtered.forEach(p=>{
+    const inCart = !!state.cart[p.id];
+    html += `
+      <div class="card">
+        <img src="${p.image}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1610030181087-540965ecca9b?w=400'">
+        <div class="card-body">
+          <div class="card-cat">${p.category}</div>
+          <div class="card-name">${p.name}</div>
+          <div class="price-row">
+            <span class="price-now">${money(p.discount>0?p.discount:p.price)}</span>
+            ${p.discount>0?`<span class="price-was">${money(p.price)}</span>`:''}
+          </div>
+          <button class="add-btn ${inCart?'in-cart':''}" onclick="addToCart('${p.id}')">${inCart?`In Order (${state.cart[p.id]}) +`:'Add to Order'}</button>
+        </div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function renderCart(){
+  const ids = Object.keys(state.cart);
+  if(ids.length===0){
+    return `<div class="empty"><div class="serif">Your order is empty</div>Browse the Shop tab to add saris.</div>`;
+  }
+  let html = '';
+  ids.forEach(id=>{
+    const p = state.products.find(x=>x.id===id);
+    if(!p) return;
+    html += `
+      <div class="cart-item">
+        <img src="${p.image}">
+        <div class="cart-item-info">
+          <div class="name">${p.name}</div>
+          <div class="price">${money(p.discount>0?p.discount:p.price)} × ${state.cart[id]}</div>
+        </div>
+        <div class="qty-ctrl">
+          <button onclick="decFromCart('${id}')">−</button>
+          <span>${state.cart[id]}</span>
+          <button onclick="addToCart('${id}')">+</button>
+        </div>
+        <button class="remove-x" onclick="removeFromCart('${id}')">×</button>
+      </div>
+    `;
+  });
+
+  html += `
+    <div class="summary-row total"><span>Total</span><span>${money(cartTotal())}</span></div>
+    <div style="height:16px;"></div>
+    <div class="form-group"><label>Your Name</label><input id="cust-name" placeholder="e.g. Priya Sharma"></div>
+    <div class="form-group"><label>Mobile Number</label><input id="cust-phone" placeholder="e.g. 98765 43210" type="tel"></div>
+    <div class="form-group"><label>Note (optional)</label><textarea id="cust-note" rows="2" placeholder="Blouse size, delivery address, etc."></textarea></div>
+    <button class="primary-btn" onclick="handleSubmitOrder()">Send Order via WhatsApp</button>
+    <div class="field-note" style="text-align:center;margin-top:10px;">We'll open WhatsApp with your order pre-filled — just tap send.</div>
+  `;
+  return html;
+}
+
+function handleSubmitOrder(){
+  const name = document.getElementById('cust-name').value.trim();
+  const phone = document.getElementById('cust-phone').value.trim();
+  const note = document.getElementById('cust-note').value.trim();
+  if(!name || !phone){ showToast('Please enter your name and mobile number'); return; }
+  submitOrder(name, phone, note);
+  setView('shop');
+}
+
+function renderAdmin(){
+  if(!state.adminUnlocked){
+    return `
+      <div class="admin-gate">
+        <h2 class="serif" style="color:var(--maroon-deep);">Admin Access</h2>
+        <div style="height:16px;"></div>
+        <div class="form-group"><input id="admin-pass" type="password" placeholder="Enter admin password"></div>
+        <button class="primary-btn" onclick="checkAdminPass()">Unlock</button>
+        <div class="field-note" style="text-align:center;">Default password: sari123 (change it below once inside)</div>
+      </div>
+    `;
+  }
+
+  let html = `
+    <div class="admin-section">
+      <h2>Settings</h2>
+      <div class="form-group"><label>Shop Name</label><input id="cfg-name" value="${state.config.shopName}"></div>
+      <div class="form-group"><label>WhatsApp Number (with country code, no + or spaces)</label><input id="cfg-wa" value="${state.config.whatsapp}" placeholder="e.g. 919876543210"></div>
+      <div class="form-group"><label>Admin Password</label><input id="cfg-pass" value="${state.config.password}"></div>
+      <button class="ghost-btn" onclick="saveSettings()">Save Settings</button>
+    </div>
+
+    <div class="admin-section">
+      <h2>Add a Sari</h2>
+      ${renderProductForm()}
+    </div>
+
+    <div class="admin-section">
+      <h2>Catalog (${state.products.length})</h2>
+      ${state.products.map(p=>`
+        <div class="prod-row">
+          <img src="${p.image}" onerror="this.src='https://images.unsplash.com/photo-1610030181087-540965ecca9b?w=400'">
+          <div style="flex:1;">
+            <div class="pname">${p.name}</div>
+            <div class="pprice">${money(p.discount>0?p.discount:p.price)} ${p.discount>0?`<s style="color:#a08890;">${money(p.price)}</s>`:''} · ${p.category}</div>
+          </div>
+          <button class="icon-btn" onclick="editProduct('${p.id}')">✎</button>
+          <button class="icon-btn" onclick="deleteProduct('${p.id}')">🗑</button>
+        </div>
+      `).join('') || '<div class="field-note">No products yet.</div>'}
+    </div>
+
+    <div class="admin-section">
+      <h2>Orders (${state.orders.length})</h2>
+      ${state.orders.length===0 ? '<div class="field-note">No orders yet.</div>' : state.orders.map(o=>`
+        <div class="order-card">
+          <div class="oh">
+            <span class="oname">${o.name}</span>
+            <span class="otime">${new Date(o.time).toLocaleDateString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+          </div>
+          <div class="ophone">📱 ${o.phone}</div>
+          <div class="oitems">${o.items.map(it=>`${it.name} × ${it.qty} — ${money(it.price*it.qty)}`).join('<br>')}${o.note?`<br><em>Note: ${o.note}</em>`:''}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong>${money(o.total)}</strong>
+            <button class="status-pill ${o.status==='done'?'status-done':'status-new'}" onclick="toggleOrderStatus('${o.id}')">${o.status==='done'?'Fulfilled':'New'}</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <button class="small-link" onclick="state.adminUnlocked=false;render()">Lock Admin</button>
+  `;
+  return html;
+}
+
+function renderProductForm(){
+  const editing = state.editingProduct;
+  return `
+    <div class="form-group"><label>Sari Name</label><input id="pf-name" value="${editing?editing.name:''}" placeholder="e.g. Banarasi Silk — Wine Red"></div>
+    <div class="form-group"><label>Category</label><input id="pf-cat" value="${editing?editing.category:''}" placeholder="e.g. Silk, Cotton, Chiffon"></div>
+    <div class="form-group"><label>Price (₹)</label><input id="pf-price" type="number" value="${editing?editing.price:''}" placeholder="e.g. 4500"></div>
+    <div class="form-group"><label>Discounted Price (₹, optional — leave blank if none)</label><input id="pf-discount" type="number" value="${editing&&editing.discount?editing.discount:''}" placeholder="e.g. 3800"></div>
+    <div class="form-group"><label>Image URL</label><input id="pf-image" value="${editing?editing.image:''}" placeholder="Paste a photo link"></div>
+    <div class="field-note">Tip: upload the photo to Google Photos/Drive, get a shareable image link, paste it here.</div>
+    <button class="primary-btn" onclick="saveProductForm()">${editing?'Save Changes':'Add to Catalog'}</button>
+    ${editing?`<button class="ghost-btn" onclick="state.editingProduct=null;render()">Cancel Edit</button>`:''}
+  `;
+}
+
+function checkAdminPass(){
+  const val = document.getElementById('admin-pass').value;
+  if(val === state.config.password){ state.adminUnlocked = true; render(); }
+  else { showToast('Incorrect password'); }
+}
+
+async function saveSettings(){
+  state.config.shopName = document.getElementById('cfg-name').value.trim() || state.config.shopName;
+  state.config.whatsapp = document.getElementById('cfg-wa').value.trim();
+  state.config.password = document.getElementById('cfg-pass').value.trim() || state.config.password;
+  await saveConfig();
+  showToast('Settings saved');
+  render();
+}
+
+async function saveProductForm(){
+  const name = document.getElementById('pf-name').value.trim();
+  const category = document.getElementById('pf-cat').value.trim() || 'Sari';
+  const price = parseFloat(document.getElementById('pf-price').value) || 0;
+  const discount = parseFloat(document.getElementById('pf-discount').value) || 0;
+  const image = document.getElementById('pf-image').value.trim() || 'https://images.unsplash.com/photo-1610030181087-540965ecca9b?w=400';
+
+  if(!name || !price){ showToast('Please enter a name and price'); return; }
+
+  if(state.editingProduct){
+    const idx = state.products.findIndex(p=>p.id===state.editingProduct.id);
+    state.products[idx] = { ...state.editingProduct, name, category, price, discount, image };
+    state.editingProduct = null;
+  } else {
+    state.products.unshift({ id: uid(), name, category, price, discount, image });
+  }
+  await saveProducts();
+  showToast('Catalog updated');
+  render();
+}
+
+function editProduct(id){
+  state.editingProduct = state.products.find(p=>p.id===id);
+  render();
+  window.scrollTo(0,0);
+}
+
+async function deleteProduct(id){
+  state.products = state.products.filter(p=>p.id!==id);
+  await saveProducts();
+  render();
+}
+
+async function toggleOrderStatus(id){
+  const o = state.orders.find(x=>x.id===id);
+  if(o){ o.status = o.status==='done' ? 'new' : 'done'; await saveOrders(); render(); }
+}
+
+window.addEventListener('error', function(e){
+  const app = document.getElementById('app');
+  if(app && !state.loaded){
+    app.innerHTML = `<div style="padding:60px 24px;text-align:center;color:#5C1A2B;font-family:sans-serif;">
+      <strong>Something went wrong loading the shop.</strong><br><br>
+      <span style="font-size:12px;color:#a08890;">${(e.message||'Unknown error')}</span><br><br>
+      <button onclick="location.reload()" style="padding:10px 18px;background:#5C1A2B;color:#fff;border:none;border-radius:3px;">Reload</button>
+    </div>`;
+  }
+});
+
+loadAll();
+</script>
+</body>
+</html>
