@@ -1,6 +1,19 @@
 "use client"
 import React, { useEffect, useState } from 'react'
 import { Product } from '../../lib/types'
+import { AdminProductForm } from '../../components/AdminProductForm'
+
+function defaultProduct(): Partial<Product> {
+  return {
+    type: 'Saree',
+    name: '',
+    category: '',
+    price: 0,
+    discountPrice: undefined,
+    image: '',
+    inStock: true
+  }
+}
 
 export default function AdminPage() {
   const [authorized, setAuthorized] = useState(false)
@@ -10,17 +23,18 @@ export default function AdminPage() {
   const [name, setName] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
-  const [config, setConfig] = useState<{ shopName?: string; whatsapp?: string; adminPassword?: string }>({})
   const [saveMessage, setSaveMessage] = useState('')
+  const [productForm, setProductForm] = useState<Partial<Product>>(defaultProduct())
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [savingProduct, setSavingProduct] = useState(false)
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
     fetch('/api/config')
       .then((r) => r.json())
       .then((c) => {
-        setConfig(c)
         setName(c.shopName || '')
         setWhatsapp(c.whatsapp || '')
-        setAdminPassword(c.adminPassword || '')
       })
       .catch(() => {})
   }, [])
@@ -29,28 +43,29 @@ export default function AdminPage() {
     if (authorized) {
       fetch('/api/products').then((r) => r.json()).then(setProducts)
       fetch('/api/orders').then((r) => r.json()).then(setOrders)
-      fetch('/api/config').then((r) => r.json()).then((c) => {
-        setConfig(c)
-        setName(c.shopName || '')
-        setWhatsapp(c.whatsapp || '')
-        setAdminPassword(c.adminPassword || '')
-      }).catch(() => {})
     }
   }, [authorized])
 
-  function login() {
-    const secret = config.adminPassword || 'admin'
-    if (pw === secret) {
+  async function login() {
+    setMessage('')
+    const res = await fetch('/api/admin/check', {
+      method: 'POST',
+      body: JSON.stringify({ password: pw }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+
+    if (res.ok) {
       setAuthorized(true)
+      setMessage('')
     } else {
-      alert('Incorrect password')
+      setMessage('Incorrect password')
     }
   }
 
   async function saveConfig() {
     const res = await fetch('/api/config', {
       method: 'PUT',
-      body: JSON.stringify({ shopName: name, whatsapp, adminPassword }),
+      body: JSON.stringify({ shopName: name, whatsapp, adminPassword: adminPassword || undefined }),
       headers: { 'Content-Type': 'application/json' }
     })
 
@@ -63,69 +78,219 @@ export default function AdminPage() {
     }
   }
 
-  async function createProduct() {
-    const p: any = {
-      type: 'Saree',
-      name: 'New Product',
-      category: 'Silk',
-      price: 1000,
-      discountPrice: 900,
-      image: 'https://images.unsplash.com/photo-1610030181087-540965ecca9b?w=800',
-      inStock: true
+  async function saveProduct() {
+    if (!productForm.name || !productForm.type || !productForm.category) {
+      setMessage('Product name, type, and category are required.')
+      return
     }
-    const res = await fetch('/api/products', { method: 'POST', body: JSON.stringify(p), headers: { 'Content-Type': 'application/json' } })
-    if (res.ok) setProducts(await (await fetch('/api/products')).json())
+    setSavingProduct(true)
+    const payload: any = {
+      ...productForm,
+      price: Number(productForm.price || 0),
+      discountPrice: productForm.discountPrice !== undefined ? Number(productForm.discountPrice) : undefined,
+      inStock: productForm.inStock !== false
+    }
+
+    // handle multiple images: data URLs -> imageBase64s, keep string URLs in images
+    if (Array.isArray(payload.images)) {
+      const imgs: string[] = payload.images
+      const dataUrls = imgs.filter((s) => typeof s === 'string' && s.startsWith('data:'))
+      const remoteUrls = imgs.filter((s) => typeof s === 'string' && !s.startsWith('data:'))
+      if (dataUrls.length) {
+        payload.imageBase64s = dataUrls.map((d) => d.split(',')[1])
+      }
+      // append remote URLs to existing images when editing
+      if (editingId) {
+        const existing = products.find((p) => p.id === editingId)
+        const existingImgs = existing ? (existing.images || (existing.image ? [existing.image] : [])) : []
+        payload.images = [...existingImgs, ...remoteUrls]
+      } else {
+        payload.images = remoteUrls.length ? remoteUrls : undefined
+      }
+    } else if (typeof payload.image === 'string' && payload.image.startsWith('data:')) {
+      const [, base64] = payload.image.split(',')
+      payload.imageBase64 = base64
+      delete payload.image
+    }
+
+    const method = editingId ? 'PUT' : 'POST'
+    const body = editingId ? { id: editingId, ...payload } : payload
+    const res = await fetch('/api/products', { method, body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } })
+    setSavingProduct(false)
+    if (res.ok) {
+      // If newly created, API returns created product
+      const created = await res.json().catch(() => null)
+      const updated = await (await fetch('/api/products')).json()
+      setProducts(updated)
+      if (editingId) {
+        const saved = updated.find((p: Product) => p.id === editingId)
+        setProductForm(saved || defaultProduct())
+        setMessage('Product saved. Images updated.')
+      } else if (created && created.id) {
+        // switch into edit mode for the newly created product so thumbnails show saved /uploads URLs
+        setEditingId(created.id)
+        setProductForm(created)
+        setMessage('Product created and ready for more edits.')
+      } else {
+        setProductForm(defaultProduct())
+        setEditingId(null)
+        setMessage('Product saved successfully.')
+      }
+    } else {
+      setMessage('Failed to save product. Please check the values.')
+    }
+  }
+
+  async function handleDeleteImage(imgPath: string) {
+    setMessage('')
+    if (!editingId) {
+      // not saved yet; just remove from form
+      setProductForm((cur) => ({ ...cur, images: (cur.images || []).filter((i) => i !== imgPath) }))
+      return
+    }
+
+    let p = imgPath.startsWith('/') ? imgPath.slice(1) : imgPath
+    const existing = products.find((p) => p.id === editingId)
+    const existingImgs = existing ? (existing.images || (existing.image ? [existing.image] : [])) : []
+    const remaining = existingImgs.filter((i) => i !== p)
+
+    // if it's an uploads file, ask server to delete file
+    if (p.startsWith('uploads/')) {
+      const del = await fetch('/api/images', { method: 'DELETE', body: JSON.stringify({ path: p }), headers: { 'Content-Type': 'application/json' } })
+      if (!del.ok) {
+        setMessage('Failed to delete image file.')
+        return
+      }
+    }
+
+    // update product record
+    const res = await fetch('/api/products', { method: 'PUT', body: JSON.stringify({ id: editingId, images: remaining }), headers: { 'Content-Type': 'application/json' } })
+    if (res.ok) {
+      const updated = await (await fetch('/api/products')).json()
+      setProducts(updated)
+      const saved = updated.find((p: Product) => p.id === editingId)
+      setProductForm(saved || defaultProduct())
+      setMessage('Image removed.')
+    } else {
+      setMessage('Failed to update product after image deletion.')
+    }
+  }
+
+  async function startEdit(product: Product) {
+    setEditingId(product.id)
+    setProductForm(product)
+    setMessage('')
+  }
+
+  async function deleteProduct(id: string) {
+    const res = await fetch(`/api/products?id=${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setProducts((cur) => cur.filter((p) => p.id !== id))
+      if (editingId === id) {
+        setEditingId(null)
+        setProductForm(defaultProduct())
+      }
+      setMessage('Product deleted.')
+    } else {
+      setMessage('Failed to delete product.')
+    }
   }
 
   if (!authorized) {
     return (
-      <div className="p-6">
-        <h1 className="text-xl font-semibold mb-4">Admin</h1>
-        <input value={pw} onChange={(e)=>setPw(e.target.value)} placeholder="Admin password" className="p-2 border rounded mb-2" />
-        <div><button onClick={login} className="px-3 py-1 bg-maroon text-white rounded">Enter</button></div>
+      <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+        <h1 className="text-2xl font-semibold mb-4">Admin Access</h1>
+        <p className="mb-4 text-stone-600">Enter the admin password to manage products and view orders.</p>
+        <input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Admin password" type="password" className="w-full rounded-2xl border border-stone-300 px-4 py-3 mb-4" />
+        <button onClick={login} className="w-full rounded-full bg-amber-900 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-800">Unlock</button>
+        {message ? <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm text-red-700">{message}</div> : null}
       </div>
     )
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Admin Dashboard</h1>
-      <section className="mb-6">
-        <h2 className="font-medium mb-2">Settings</h2>
-        <div className="mb-2">
-          <label className="block">Shop name</label>
-          <input value={name} onChange={(e)=>setName(e.target.value)} className="p-2 border rounded w-full" />
+    <div className="space-y-6">
+      <section className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold mb-4">Settings</h2>
+            <div className="grid gap-4">
+              <label className="space-y-2">
+                <span className="text-sm font-medium">Shop name</span>
+                <input value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-2xl border border-stone-300 px-4 py-3" />
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm font-medium">WhatsApp number</span>
+                <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} className="w-full rounded-2xl border border-stone-300 px-4 py-3" placeholder="919876543210" />
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm font-medium">Admin password</span>
+                <input value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} type="password" className="w-full rounded-2xl border border-stone-300 px-4 py-3" placeholder="Leave blank to keep current" />
+              </label>
+              <button onClick={saveConfig} className="rounded-full bg-amber-900 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-800">Save settings</button>
+              {saveMessage ? <div className="text-sm text-emerald-700">{saveMessage}</div> : null}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">Products</h2>
+                <p className="text-sm text-stone-500">Create, edit, and delete products available in the shop.</p>
+              </div>
+              <button onClick={() => { setEditingId(null); setProductForm(defaultProduct()); setMessage('') }} className="rounded-full border border-amber-900 px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-50">New product</button>
+            </div>
+            <div className="mt-4 space-y-3">
+              {products.map((product) => (
+                <div key={product.id} className="flex flex-col gap-3 rounded-3xl border border-stone-200 bg-stone-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="font-semibold">{product.name}</div>
+                    <div className="text-sm text-stone-600">{product.type} • {product.category}</div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => startEdit(product)} className="rounded-full border border-amber-900 px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-50">Edit</button>
+                    <button onClick={() => deleteProduct(product.id)} className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {message ? <div className="mt-4 rounded-3xl bg-stone-100 p-4 text-sm text-stone-700">{message}</div> : null}
+          </div>
         </div>
-        <div className="mb-2">
-          <label className="block">WhatsApp (E.164 without +)</label>
-          <input value={whatsapp} onChange={(e)=>setWhatsapp(e.target.value)} className="p-2 border rounded w-full" />
+
+        <div>
+          <AdminProductForm
+            product={productForm}
+            onChange={setProductForm}
+            onSave={saveProduct}
+            onDelete={editingId ? () => deleteProduct(editingId) : undefined}
+            onDeleteImage={handleDeleteImage}
+            saving={savingProduct}
+          />
         </div>
-        <div className="mb-2">
-          <label className="block">Admin password</label>
-          <input value={adminPassword} onChange={(e)=>setAdminPassword(e.target.value)} type="password" className="p-2 border rounded w-full" />
-          <p className="text-sm text-gray-500 mt-1">If no password is set, the default admin password is <strong>admin</strong>.</p>
-        </div>
-        <button onClick={saveConfig} className="px-3 py-1 bg-maroon text-white rounded">Save</button>
-        {saveMessage ? <div className="mt-3 text-sm text-green-700">{saveMessage}</div> : null}
       </section>
 
-      <section className="mb-6">
-        <h2 className="font-medium mb-2">Products</h2>
-        <div className="mb-2"><button onClick={createProduct} className="px-3 py-1 bg-green-600 text-white rounded">Create sample product</button></div>
-        <ul>
-          {products.map(p => (
-            <li key={p.id} className="mb-2">{p.name} — {p.type} — {p.category} — {p.inStock? 'In stock': 'Out'}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section>
-        <h2 className="font-medium mb-2">Orders</h2>
-        <ul>
-          {orders.map((o:any) => (
-            <li key={o.id} className="mb-2">{o.name} — {o.phone} — ₹{o.total} — {o.timestamp}</li>
-          ))}
-        </ul>
+      <section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-semibold mb-4">Orders</h2>
+        {orders.length === 0 ? (
+          <div className="text-stone-500">No orders have been placed yet.</div>
+        ) : (
+          <div className="space-y-4">
+            {orders.map((order:any) => (
+              <div key={order.id} className="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="font-semibold">{order.name}</div>
+                    <div className="text-sm text-stone-600">{order.phone}</div>
+                  </div>
+                  <div className="text-sm text-stone-500">{new Date(order.timestamp).toLocaleString()}</div>
+                </div>
+                <div className="mt-3 text-sm text-stone-700">Total: ₹{order.total}</div>
+                {order.note ? <div className="mt-2 text-sm text-stone-600">Note: {order.note}</div> : null}
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   )

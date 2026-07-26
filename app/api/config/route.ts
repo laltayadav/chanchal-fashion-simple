@@ -3,12 +3,23 @@ import { getConfig, saveConfig } from '../../../lib/db'
 
 export async function GET() {
   const cfg = await getConfig()
-  return NextResponse.json(cfg)
+  const publicConfig = {
+    shopName: cfg.shopName,
+    whatsapp: cfg.whatsapp
+  }
+  return NextResponse.json(publicConfig)
 }
 
 export async function PUT(req: Request) {
   const body = await req.json()
-  await saveConfig(body)
+  const existing = await getConfig()
+  const merged = { ...existing, ...body }
+  // If client intentionally sent an empty string for adminPassword, keep existing.
+  if (body.hasOwnProperty('adminPassword') && (body.adminPassword === '' || body.adminPassword === null)) {
+    // restore existing password
+    merged.adminPassword = existing.adminPassword
+  }
+  await saveConfig(merged)
   return NextResponse.json({ ok: true })
 }
 
