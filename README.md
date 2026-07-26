@@ -165,12 +165,11 @@ By default, Fly app container files are ephemeral across deploys/restarts.
 This project persists runtime data by mounting volumes and pointing env vars to them.
 
 - Product/order/config/admin-auth JSON data: `DATA_DIR=/data`
-- Uploaded images: `UPLOADS_DIR=/app/public/uploads`
+- Uploaded images: `UPLOADS_DIR=/data`
 
-Before first deploy with mounts, create both volumes in the same region as `primary_region`:
+Before first deploy with mounts, create one volume in the same region as `primary_region`:
 
 ```bash
-fly volumes create app_data --region sin --size 1
 fly volumes create uploads_data --region sin --size 3
 ```
 
