@@ -23,8 +23,9 @@ export async function saveProductImage(buffer: Buffer): Promise<string> {
 
 export async function deleteProductImage(relPath: string): Promise<void> {
   if (!relPath) return
-  // allow relPath like 'uploads/xxx.webp' or 'data/images/xxx.webp'
-  const candidate = relPath.startsWith('uploads/') ? path.join(process.cwd(), 'public', relPath) : path.join(process.cwd(), relPath)
+  // Only allow deleting files under public/uploads to avoid path traversal and broad tracing.
+  if (!relPath.startsWith('uploads/')) return
+  const candidate = path.join(process.cwd(), 'public', relPath)
   if (fs.existsSync(candidate)) {
     await fs.promises.unlink(candidate)
   }

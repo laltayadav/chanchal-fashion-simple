@@ -1,11 +1,12 @@
 import fs from 'fs'
 import path from 'path'
-import { Product, Order, Config } from './types'
+import { Product, Order, Config, AdminAuthState } from './types'
 
 const DATA_DIR = path.join(process.cwd(), 'data')
 const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json')
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json')
 const CONFIG_FILE = path.join(DATA_DIR, 'config.json')
+const ADMIN_AUTH_FILE = path.join(DATA_DIR, 'admin-auth.json')
 
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true })
@@ -52,5 +53,13 @@ export async function getConfig(): Promise<Config> {
 
 export async function saveConfig(cfg: Config): Promise<void> {
   writeJson(CONFIG_FILE, cfg)
+}
+
+export async function getAdminAuthState(): Promise<AdminAuthState> {
+  return readJson<AdminAuthState>(ADMIN_AUTH_FILE, { failedAttempts: 0, lockUntil: null, lastFailedAt: null })
+}
+
+export async function saveAdminAuthState(state: AdminAuthState): Promise<void> {
+  writeJson(ADMIN_AUTH_FILE, state)
 }
 

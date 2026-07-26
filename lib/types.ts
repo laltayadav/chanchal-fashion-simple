@@ -36,3 +36,9 @@ export type Config = {
   whatsapp?: string
   adminPassword?: string
 }
+
+export interface AdminAuthState {
+  failedAttempts: number
+  lockUntil?: number | null
+  lastFailedAt?: string | null
+}

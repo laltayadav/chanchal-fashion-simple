@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getConfig, saveConfig } from '../../../lib/db'
+import { requireAdmin } from '../../../lib/admin-guard'
 
 export async function GET() {
   const cfg = await getConfig()
@@ -10,7 +11,10 @@ export async function GET() {
   return NextResponse.json(publicConfig)
 }
 
-export async function PUT(req: Request) {
+export async function PUT(req: NextRequest) {
+  const auth = await requireAdmin(req)
+  if (auth) return auth
+
   const body = await req.json()
   const existing = await getConfig()
   const merged = { ...existing, ...body }

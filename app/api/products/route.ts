@@ -1,14 +1,18 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
 import { getProducts, saveProducts } from '../../../lib/db'
 import { saveProductImage, deleteProductImage } from '../../../lib/images'
+import { requireAdmin } from '../../../lib/admin-guard'
 
 export async function GET() {
   const products = await getProducts()
   return NextResponse.json(products)
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const auth = await requireAdmin(req)
+  if (auth) return auth
+
   const body = await req.json()
   const products = await getProducts()
   const id = uuidv4()
@@ -51,7 +55,10 @@ export async function POST(req: Request) {
   return NextResponse.json(product, { status: 201 })
 }
 
-export async function PUT(req: Request) {
+export async function PUT(req: NextRequest) {
+  const auth = await requireAdmin(req)
+  if (auth) return auth
+
   const body = await req.json()
   if (!body.id) return NextResponse.json({ error: 'id required' }, { status: 400 })
   const products = await getProducts()
@@ -95,7 +102,10 @@ export async function PUT(req: Request) {
   return NextResponse.json(existing)
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
+  const auth = await requireAdmin(req)
+  if (auth) return auth
+
   const url = new URL(req.url)
   const id = url.searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })

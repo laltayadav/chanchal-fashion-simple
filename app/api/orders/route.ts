@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
 import { getOrders, saveOrders } from '../../../lib/db'
 import { Order } from '../../../lib/types'
+import { requireAdmin } from '../../../lib/admin-guard'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req)
+  if (auth) return auth
+
   const orders = await getOrders()
   return NextResponse.json(orders)
 }
