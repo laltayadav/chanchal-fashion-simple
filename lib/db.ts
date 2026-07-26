@@ -2,7 +2,8 @@ import fs from 'fs'
 import path from 'path'
 import { Product, Order, Config, AdminAuthState } from './types'
 
-const DATA_DIR = path.join(process.cwd(), 'data')
+const DEFAULT_DATA_DIR = path.join(process.cwd(), 'data')
+const DATA_DIR = process.env.DATA_DIR || DEFAULT_DATA_DIR
 const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json')
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json')
 const CONFIG_FILE = path.join(DATA_DIR, 'config.json')
@@ -16,8 +17,16 @@ function readJson<T>(filePath: string, fallback: T): T {
   try {
     ensureDataDir()
     if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, JSON.stringify(fallback, null, 2) + '\n', 'utf8')
-      return fallback
+      const relPath = path.relative(DATA_DIR, filePath)
+      const seedPath = path.join(DEFAULT_DATA_DIR, relPath)
+
+      // First boot on a mounted data dir: seed from bundled files if available.
+      if (DATA_DIR !== DEFAULT_DATA_DIR && fs.existsSync(seedPath)) {
+        fs.copyFileSync(seedPath, filePath)
+      } else {
+        fs.writeFileSync(filePath, JSON.stringify(fallback, null, 2) + '\n', 'utf8')
+        return fallback
+      }
     }
     const raw = fs.readFileSync(filePath, 'utf8')
     return JSON.parse(raw) as T

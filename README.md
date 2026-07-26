@@ -159,6 +159,33 @@ Production readiness requires all of the following:
 - Day-0 Fly.io launch checklist: `docs/FLYIO_DAY0_LAUNCH_CHECKLIST.md`
 - 5-minute manual backup SOP: `docs/MANUAL_BACKUP_SOP_5_MIN.md`
 
+## Fly data persistence
+
+By default, Fly app container files are ephemeral across deploys/restarts.
+This project persists runtime data by mounting volumes and pointing env vars to them.
+
+- Product/order/config/admin-auth JSON data: `DATA_DIR=/data`
+- Uploaded images: `UPLOADS_DIR=/app/public/uploads`
+
+Before first deploy with mounts, create both volumes in the same region as `primary_region`:
+
+```bash
+fly volumes create app_data --region sin --size 1
+fly volumes create uploads_data --region sin --size 3
+```
+
+Then deploy:
+
+```bash
+fly deploy
+```
+
+Notes:
+
+- On first boot with a new `DATA_DIR` volume, bundled `data/*.json` files are auto-seeded once.
+- Fly volumes are attached per machine and are not shared across multiple running machines.
+   If you need multi-instance writes, use an external database (for example Postgres/Turso).
+
 ## Notes
 
 - The current implementation is a functional scaffold for the storefront and admin areas.
