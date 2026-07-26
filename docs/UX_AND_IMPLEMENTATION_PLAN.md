@@ -36,11 +36,14 @@ interface Product {
   type: ProductType
   name: string
   category: string        // free text subcategory: "Silk", "Chiffon", "Designer", etc.
+   size?: string           // flexible text: "Free Size", "38 inch", "XL", etc.
   price: number
   discountPrice?: number  // omit or 0 = no discount
   image: string
   includes?: string       // Set only, e.g. "Saree + Matching Blouse"
   inStock: boolean        // default true — add now, don't retrofit later
+   createdAt?: string      // ISO timestamp when product was first created
+   updatedAt?: string      // ISO timestamp when product was last updated
 }
 ```
 

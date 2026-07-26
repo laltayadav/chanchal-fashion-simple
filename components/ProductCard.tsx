@@ -86,6 +86,7 @@ export default function ProductCard({ product, onAdd }: Props) {
       )}
       <div className="mt-4 text-xs uppercase tracking-[0.3em] text-ink/50">{product.type} • {productLabel}</div>
       <h3 className="mt-2 text-xl font-serif font-semibold text-maroon-deep">{product.name}</h3>
+      {product.size ? <div className="mt-1 text-xs text-ink/60">Size: {product.size}</div> : null}
       <div className="mt-3 mb-4">
         {product.discountPrice ? (
           <div className="flex items-center gap-3 text-lg">

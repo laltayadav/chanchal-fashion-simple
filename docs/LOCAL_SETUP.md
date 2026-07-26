@@ -58,6 +58,11 @@ EOF
 
 Optional: paste real product/order data in now (from the artifact's Admin tab) instead of starting empty.
 
+When adding sample products, include metadata fields where possible:
+
+- `size` as optional free text (for example `Free Size`, `38 inch`, `XL`)
+- `createdAt` and `updatedAt` as ISO timestamps for recency-aware admin sorting
+
 ## 4. Decide how `data/` is tracked in git
 
 Recommended — track the JSON files, but keep binary images out of git history:
@@ -75,10 +80,16 @@ touch data/images/.gitkeep
 
 ```bash
 cat > .env.local << 'EOF'
-ADMIN_PASSWORD=changeme
+ADMIN_SESSION_SECRET=replace-with-a-long-random-secret-at-least-32-chars
 EOF
 
 echo ".env.local" >> .gitignore
+```
+
+Generate a secure session secret quickly:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 ```
 
 ## 6. Build the data/image helper libraries
@@ -95,6 +106,26 @@ npm run dev
 ```
 
 Visit `http://localhost:3000`. You'll see the default Next.js starter page until the shop/cart/admin UI is ported over from the artifact.
+
+Admin routes:
+
+- `/admin` overview
+- `/admin/products` products CRUD
+- `/admin/orders` order history
+- `/admin/settings` shop settings + admin password update
+
+## 8. Test and release gate checks
+
+```bash
+npm run test
+npm run build
+```
+
+Before production readiness, require:
+
+1. Tests pass
+2. Build passes
+3. Manual admin smoke check on desktop and narrow mobile viewport
 
 ## 8. First commit, push to your private GitHub repo
 

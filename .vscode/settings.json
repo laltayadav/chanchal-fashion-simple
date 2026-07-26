@@ -1,5 +1,9 @@
 {
     "chat.tools.terminal.autoApprove": {
-        "openspec": true
+        "openspec": true,
+        "/^node -e 'const fs=require\\(\"fs\"\\); const path=require\\(\"path\"\\); const \\{randomBytes,scryptSync\\}=require\\(\"crypto\"\\); const file=path\\.join\\(process\\.cwd\\(\\),\"data\",\"config\\.json\"\\); const cfg=JSON\\.parse\\(fs\\.readFileSync\\(file,\"utf8\"\\)\\); const pw=\"V9!qR2#tL8@pM4\\$zX7\\^k\"; const salt=randomBytes\\(16\\)\\.toString\\(\"base64url\"\\); const hash=scryptSync\\(pw,salt,64\\)\\.toString\\(\"base64url\"\\); cfg\\.adminPasswordHash=\"scrypt\\$\"\\+salt\\+\"\\$\"\\+hash; delete cfg\\.adminPassword; fs\\.writeFileSync\\(file, JSON\\.stringify\\(cfg,null,2\\)\\+\"\\\\n\"\\);'$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }

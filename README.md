@@ -32,6 +32,30 @@ Production:
 - Do not commit production secrets to the repository.
 - Rotate the secret if it is ever exposed (rotation invalidates existing admin session cookies).
 
+## Admin password troubleshooting
+
+Admin login uses a hashed password stored in `data/config.json` as `adminPasswordHash`.
+If an old plain password no longer works, reset the admin password by writing a new hash.
+
+1. Run this command from the project root (replace `ReplaceWithStrongPass123!`):
+
+```bash
+node -e "const fs=require('fs');const crypto=require('crypto');const p='data/config.json';const cfg=JSON.parse(fs.readFileSync(p,'utf8'));const newPass='ReplaceWithStrongPass123!';const salt=crypto.randomBytes(16).toString('base64url');const hash=crypto.scryptSync(newPass,salt,64).toString('base64url');cfg.adminPasswordHash=`scrypt$${salt}$${hash}`;delete cfg.adminPassword;fs.writeFileSync(p,JSON.stringify(cfg,null,2)+'\n');console.log('Admin password reset.');"
+```
+
+2. Restart the app:
+
+```bash
+npm run dev
+```
+
+3. Log in again at `/admin` with the new password.
+
+Notes:
+
+- Password updates through the admin security API require at least 12 characters.
+- If login still fails, clear localhost cookies and retry.
+
 ## Run locally
 
 1. Install dependencies
@@ -57,14 +81,63 @@ Production:
 - lib/ — helper modules for JSON data and image handling
 - data/ — seed JSON files for products, orders, and config
 
+## Product metadata
+
+Products support additional merchandising and audit metadata:
+
+- `size` (optional free text): examples include `Free Size`, `38 inch`, `XL`
+- `createdAt` (optional ISO timestamp): set when product is created
+- `updatedAt` (optional ISO timestamp): refreshed when product is updated
+
+Admin product lists prioritize newest activity using `updatedAt` with `createdAt` fallback.
+Storefront provides an explicit sort option (`Featured` or `Newest`) while preserving existing type/category filters.
+
+## Order handoff semantics
+
+- Checkout requires `name`, `phone`, and `address` before order submission.
+- Address is stored in order records for admin history/detail views.
+- WhatsApp handoff message includes `Address:` before the `Note:` line.
+- Legacy orders without address remain readable in admin with a safe fallback label.
+
 ## Build for production
 
 ```bash
 npm run build
 ```
 
+## Automated tests
+
+```bash
+npm run test
+```
+
+Test coverage currently includes:
+
+- Admin auth (success/failure), protected endpoint authorization
+- Config validation and allowlist behavior
+- Dedicated admin security password update flow
+- Product API create/edit/delete behavior
+- Order placement persistence and admin order visibility
+- Order address validation/persistence and WhatsApp message formatting
+
+## Admin route map
+
+- `/admin` - Overview dashboard
+- `/admin/products` - Product management (add/edit/delete)
+- `/admin/orders` - Order history
+- `/admin/orders/[id]` - Order detail
+- `/admin/settings` - Shop settings and admin password updates
+
+## Release gate
+
+Production readiness requires all of the following:
+
+1. `npm run test` passes
+2. `npm run build` passes
+3. Manual admin smoke check on desktop and narrow mobile viewport
+
 ## Notes
 
 - The current implementation is a functional scaffold for the storefront and admin areas.
-- Product and order management are planned for the next iteration.
+- Product and order management are now available in dedicated admin routes.
 - Keep `.env*` files untracked. This repository ignores env files by default.

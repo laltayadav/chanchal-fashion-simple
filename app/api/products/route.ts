@@ -3,9 +3,11 @@ import { v4 as uuidv4 } from 'uuid'
 import { getProducts, saveProducts } from '../../../lib/db'
 import { saveProductImage, deleteProductImage } from '../../../lib/images'
 import { requireAdmin } from '../../../lib/admin-guard'
+import { normalizeProductRecency } from '../../../lib/product-recency'
+import { Product } from '../../../lib/types'
 
 export async function GET() {
-  const products = await getProducts()
+  const products = (await getProducts()).map((product) => normalizeProductRecency(product))
   return NextResponse.json(products)
 }
 
@@ -16,7 +18,6 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const products = await getProducts()
   const id = uuidv4()
-  let imagePath: string | undefined = undefined
   // support multiple image base64s or array of image URLs
   let images: string[] = []
   if (Array.isArray(body.imageBase64s) && body.imageBase64s.length) {
@@ -38,17 +39,21 @@ export async function POST(req: NextRequest) {
     images.push(body.image.trim())
   }
 
+  const now = new Date().toISOString()
   const product = {
     id,
     type: body.type,
     name: body.name,
     category: body.category || '',
+    size: typeof body.size === 'string' && body.size.trim() ? body.size.trim() : undefined,
     price: Number(body.price) || 0,
     discountPrice: body.discountPrice ? Number(body.discountPrice) : undefined,
     image: images[0],
     images: images.length > 0 ? images : undefined,
     includes: body.includes,
     inStock: body.inStock !== false,
+    createdAt: now,
+    updatedAt: now,
   }
   products.push(product)
   await saveProducts(products)
@@ -64,7 +69,7 @@ export async function PUT(req: NextRequest) {
   const products = await getProducts()
   const idx = products.findIndex((p) => p.id === body.id)
   if (idx === -1) return NextResponse.json({ error: 'not found' }, { status: 404 })
-  const existing = products[idx]
+  const existing = normalizeProductRecency(products[idx] as Product)
   // handle multiple images
   if (Array.isArray(body.imageBase64s) && body.imageBase64s.length) {
     // append new uploaded images to existing images (do not delete existing by default)
@@ -93,10 +98,15 @@ export async function PUT(req: NextRequest) {
   existing.type = body.type ?? existing.type
   existing.name = body.name ?? existing.name
   existing.category = body.category ?? existing.category
+  if (body.size !== undefined) {
+    existing.size = typeof body.size === 'string' && body.size.trim() ? body.size.trim() : undefined
+  }
   existing.price = body.price !== undefined ? Number(body.price) : existing.price
   existing.discountPrice = body.discountPrice !== undefined ? Number(body.discountPrice) : existing.discountPrice
   existing.includes = body.includes ?? existing.includes
   existing.inStock = body.inStock !== undefined ? Boolean(body.inStock) : existing.inStock
+  existing.createdAt = existing.createdAt || new Date().toISOString()
+  existing.updatedAt = new Date().toISOString()
   products[idx] = existing
   await saveProducts(products)
   return NextResponse.json(existing)

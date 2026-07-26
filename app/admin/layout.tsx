@@ -1,10 +1,16 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
+import { AdminNav } from '../../components/AdminNav'
+import { isAdminAuthenticated } from '../../lib/admin-auth'
 
 export const metadata: Metadata = {
   title: 'Admin - Chanchal Fashion'
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies()
+  const authenticated = await isAdminAuthenticated(cookieStore)
+
   return (
     <div className="min-h-screen bg-[#f7f4ef]">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -17,6 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <p className="text-sm text-stone-500">Manage products, orders, and shop settings.</p>
           </div>
         </header>
+        {authenticated ? <AdminNav /> : null}
         <main>{children}</main>
       </div>
     </div>

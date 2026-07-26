@@ -156,6 +156,17 @@ export function AdminProductForm({ product, onChange, onSave, onDelete, onDelete
           <input value={product.image || ''} onChange={(e) => onChange({ ...product, image: e.target.value })} className="w-full rounded-2xl border border-stone-300 px-4 py-3" />
         </label>
       </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="space-y-2">
+          <span className="text-sm font-semibold">Size</span>
+          <input
+            value={product.size || ''}
+            onChange={(e) => onChange({ ...product, size: e.target.value })}
+            placeholder="Free Size, 38 inch, XL"
+            className="w-full rounded-2xl border border-stone-300 px-4 py-3"
+          />
+        </label>
+      </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="space-y-2">
           <span className="text-sm font-semibold">Price</span>

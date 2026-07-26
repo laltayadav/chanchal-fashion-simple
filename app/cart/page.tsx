@@ -2,11 +2,13 @@
 import React, { useEffect, useState } from 'react'
 import { useCart } from '../../components/CartContext'
 import AppShell from '../../components/AppShell'
+import { buildOrderWhatsappMessage } from '../../lib/order-whatsapp'
 
 function CartInner() {
   const { items, remove, updateQty, clear } = useCart()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [address, setAddress] = useState('')
   const [note, setNote] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
   const [loading, setLoading] = useState(false)
@@ -22,8 +24,8 @@ function CartInner() {
   const total = items.reduce((s, i) => s + i.unitPrice * i.qty, 0)
 
   async function submit() {
-    if (!name.trim() || !phone.trim()) {
-      setMessage('Please provide your name and phone number.')
+    if (!name.trim() || !phone.trim() || !address.trim()) {
+      setMessage('Please provide your name, phone number, and address.')
       return
     }
     if (items.length === 0) {
@@ -31,11 +33,18 @@ function CartInner() {
       return
     }
     setLoading(true)
-    const payload = { items, total, name, phone, note }
+    const payload = { items, total, name, phone, address, note }
     const res = await fetch('/api/orders', { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'application/json' } })
     setLoading(false)
     if (res.ok) {
-      const plain = `Order\nName: ${name}\nPhone: ${phone}\nItems:\n${items.map(i => `${i.qty}x ${i.name} - ₹${i.unitPrice}`).join('\n')}\nTotal: ₹${total}\nNote: ${note}`
+      const plain = buildOrderWhatsappMessage({
+        name,
+        phone,
+        address,
+        items,
+        total,
+        note,
+      })
       const text = encodeURIComponent(plain)
       const waNumber = whatsapp || ''
       if (!waNumber) {
@@ -47,6 +56,7 @@ function CartInner() {
       clear()
       setName('')
       setPhone('')
+      setAddress('')
       setNote('')
       setMessage('Order created and WhatsApp opened. Clear the cart before placing another order.')
     } else {
@@ -106,6 +116,10 @@ function CartInner() {
             <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full rounded-2xl border border-stone-300 px-4 py-3" />
           </label>
         </div>
+        <label className="mt-4 block space-y-2">
+          <span className="text-sm font-medium">Address</span>
+          <textarea value={address} onChange={(e) => setAddress(e.target.value)} className="w-full rounded-2xl border border-stone-300 px-4 py-3" rows={3} placeholder="House/flat, area, city" />
+        </label>
         <label className="mt-4 block space-y-2">
           <span className="text-sm font-medium">Note</span>
           <textarea value={note} onChange={(e) => setNote(e.target.value)} className="w-full rounded-2xl border border-stone-300 px-4 py-3" rows={4} />

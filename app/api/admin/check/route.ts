@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getConfig } from '../../../../lib/db'
+import { getConfig, saveConfig } from '../../../../lib/db'
+import { isPasswordValid, normalizeConfigSecrets } from '../../../../lib/admin-password'
 import {
   ADMIN_SESSION_COOKIE,
   ADMIN_TRUST_COOKIE,
@@ -15,14 +16,17 @@ export async function POST(req: Request) {
   const body = await req.json()
   const password = String(body.password || '')
   const rememberDevice = Boolean(body.rememberDevice)
-  const cfg = await getConfig()
-  const secret = cfg.adminPassword || 'admin'
+  const rawConfig = await getConfig()
+  const cfg = normalizeConfigSecrets(rawConfig)
+  if (cfg !== rawConfig) {
+    await saveConfig(cfg)
+  }
 
   if (await isAdminLockedOut()) {
     return NextResponse.json({ error: 'admin temporarily locked' }, { status: 423 })
   }
 
-  if (password === secret) {
+  if (isPasswordValid(cfg, password)) {
     await clearAdminLockout()
     const response = NextResponse.json({ ok: true })
     const tokens = buildAdminSessionCookies(rememberDevice)

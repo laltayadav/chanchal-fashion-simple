@@ -5,11 +5,13 @@ import { useCart } from '../components/CartContext'
 import CartDrawer from '../components/CartDrawer'
 import { Product } from '../lib/types'
 import AppShell from '../components/AppShell'
+import { sortProductsByRecent } from '../lib/product-recency'
 
 function ShopInner() {
   const [products, setProducts] = useState<Product[]>([])
   const [type, setType] = useState<'All' | 'Saree' | 'Blouse' | 'Set'>('All')
   const [category, setCategory] = useState<string>('All')
+  const [sortBy, setSortBy] = useState<'featured' | 'newest'>('featured')
   const { add, items } = useCart()
   const [showFloatingFilters, setShowFloatingFilters] = useState(false)
 
@@ -41,7 +43,8 @@ function ShopInner() {
 
   const filtered = products.filter((p) => (type === 'All' ? true : p.type === type))
   const categories = Array.from(new Set(filtered.map((p) => getSubcategory(p)).filter(Boolean)))
-  const final = filtered.filter((p) => (category === 'All' ? true : getSubcategory(p) === category))
+  const categoryFiltered = filtered.filter((p) => (category === 'All' ? true : getSubcategory(p) === category))
+  const final = sortBy === 'newest' ? sortProductsByRecent(categoryFiltered) : categoryFiltered
   const totalQty = items.reduce((sum, item) => sum + item.qty, 0)
 
   return (
@@ -82,6 +85,20 @@ function ShopInner() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="flex justify-end">
+            <label className="flex items-center gap-2 text-sm text-ink/70">
+              <span>Sort</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'featured' | 'newest')}
+                className="rounded-chip border border-maroon/20 bg-white px-3 py-2 text-sm text-ink shadow-sm"
+              >
+                <option value="featured">Featured</option>
+                <option value="newest">Newest</option>
+              </select>
+            </label>
           </div>
 
           {type !== 'All' && (

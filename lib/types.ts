@@ -5,12 +5,15 @@ export interface Product {
   type: ProductType
   name: string
   category: string
+  size?: string
   price: number
   discountPrice?: number
   image?: string
   images?: string[]
   includes?: string
   inStock: boolean
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface OrderItem {
@@ -26,6 +29,7 @@ export interface Order {
   total: number
   name: string
   phone: string
+  address?: string
   note?: string
   timestamp: string
   status?: 'new' | 'fulfilled'
@@ -35,6 +39,7 @@ export type Config = {
   shopName?: string
   whatsapp?: string
   adminPassword?: string
+  adminPasswordHash?: string
 }
 
 export interface AdminAuthState {
