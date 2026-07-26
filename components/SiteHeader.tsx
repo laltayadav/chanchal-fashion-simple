@@ -6,19 +6,17 @@ export function SiteHeader() {
   const totalQty = items.reduce((sum, item) => sum + item.qty, 0)
 
   return (
-    <header className="flex flex-col gap-4 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
-      <div>
-        <p className="text-xs uppercase tracking-[0.35em] text-amber-700">Chanchal Fashion</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Weave Your Own Story</h1>
+    <header className="rounded-card border border-maroon/10 bg-cream p-6 shadow-sm md:flex md:items-center md:justify-between md:gap-6">
+      <div className="space-y-2">
+        <p className="text-[11px] uppercase tracking-[0.35em] text-gold">Chanchal Fashion</p>
+        <h1 className="text-3xl font-serif font-semibold tracking-tight text-maroon-deep">Weave Your Own Story</h1>
       </div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <nav className="flex flex-wrap gap-2 text-sm font-medium">
-          <Link href="/" className="rounded-full border border-stone-200 bg-stone-50 px-3 py-2 hover:border-amber-700">Shop</Link>
-          <Link href="/cart" className="rounded-full border border-stone-200 bg-stone-50 px-3 py-2 hover:border-amber-700">Cart</Link>
+      <div className="mt-4 flex flex-col gap-3 sm:mt-0 sm:flex-row sm:items-center">
+        <nav className="flex flex-wrap gap-2 text-sm font-medium text-ink">
+          <Link href="/" className="rounded-chip border border-maroon/10 bg-white px-4 py-2 transition hover:border-maroon">Shop</Link>
+          <Link href="/cart" className="rounded-chip border border-maroon/10 bg-white px-4 py-2 transition hover:border-maroon">Cart</Link>
         </nav>
-        <div className="rounded-full bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900">
-          Cart: {totalQty} item{totalQty === 1 ? '' : 's'}
-        </div>
+        <div className="rounded-chip bg-gold-soft px-4 py-2 text-sm font-semibold text-maroon-deep">{totalQty} item{totalQty === 1 ? '' : 's'}</div>
       </div>
     </header>
   );

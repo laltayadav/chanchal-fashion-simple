@@ -26,42 +26,35 @@ function ShopInner() {
   const final = filtered.filter((p) => (category === 'All' ? true : p.category === category))
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-semibold">Handpicked saris, delivered with care</h1>
-          <p className="max-w-2xl text-sm text-stone-600">Browse curated saree, blouse, and set collections</p>
+    <div className="space-y-8">
+      <section className="rounded-card border border-maroon/10 bg-cream p-6 shadow-sm">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="text-sm uppercase tracking-[0.35em] text-gold">Chanchal Fashion</div>
+          <h1 className="max-w-3xl text-4xl font-serif font-semibold leading-tight text-maroon-deep sm:text-5xl">Weave Your Own Story with beautifully crafted sarees, blouses, and sets.</h1>
+          <p className="max-w-2xl text-base leading-7 text-ink/75">Handpicked styles, thoughtful details and festive elegance for every celebration. Discover curated pieces made to make every outfit feel special.</p>
         </div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_320px]">
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
               {types.map((t) => (
                 <button
                   key={t}
                   onClick={() => { setType(t); setCategory('All') }}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${type===t ? 'bg-amber-900 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'}`}>
+                  className={`rounded-chip px-4 py-2 text-sm font-medium transition ${type===t ? 'bg-maroon text-white' : 'bg-white text-ink shadow-sm hover:bg-cream'}`}>
                   {t}
                 </button>
               ))}
-            </div>
-<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-900">
-              {items.length} item{items.length === 1 ? '' : 's'} in cart
-            </div>
-            <Link href="/cart" className="rounded-full border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-medium text-stone-700 hover:border-amber-700">
-              View cart
-            </Link>
             </div>
           </div>
 
           {type !== 'All' && (type === 'Saree' || type === 'Blouse') && (
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => setCategory('All')} className={`rounded-full px-3 py-2 text-sm transition ${category==='All'? 'bg-amber-900 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'}`}>All</button>
+              <button onClick={() => setCategory('All')} className={`rounded-chip px-3 py-2 text-sm font-medium transition ${category==='All'? 'bg-maroon text-white' : 'bg-white text-ink shadow-sm hover:bg-cream'}`}>All</button>
               {categories.map((c) => (
-                <button key={c} onClick={() => setCategory(c)} className={`rounded-full px-3 py-2 text-sm transition ${category===c? 'bg-amber-900 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'}`}>{c}</button>
+                <button key={c} onClick={() => setCategory(c)} className={`rounded-chip px-3 py-2 text-sm font-medium transition ${category===c? 'bg-maroon text-white' : 'bg-white text-ink shadow-sm hover:bg-cream'}`}>{c}</button>
               ))}
             </div>
           )}

@@ -55,50 +55,50 @@ export default function ProductCard({ product, onAdd }: Props) {
   }, [index, gallery, open])
 
   return (
-    <div className="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+    <div className="rounded-card border border-maroon/10 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
       {displaySrc ? (
-        <div className="relative">
+        <div className="relative overflow-hidden rounded-card">
           <img
             src={displaySrc}
             alt={product.name}
             onClick={() => gallery.length > 0 && setOpen(true)}
-            className="h-52 w-full rounded-3xl object-cover cursor-zoom-in"
+            className="aspect-[4/3] w-full object-cover cursor-zoom-in"
           />
           {gallery.length > 1 && (
-            <div className="absolute right-3 top-3 rounded-full bg-stone-100/80 px-3 py-1 text-sm">{gallery.length} images</div>
+            <div className="absolute right-3 top-3 rounded-chip bg-white/90 px-3 py-1 text-xs font-semibold text-ink shadow-sm">{gallery.length} images</div>
           )}
         </div>
       ) : (
-        <div className="flex h-52 items-center justify-center rounded-3xl bg-stone-100 text-stone-500">No Image</div>
+        <div className="flex h-52 items-center justify-center rounded-card bg-stone-100 text-stone-500">No Image</div>
       )}
-      <div className="mt-3 text-sm text-stone-500">{product.type} • {product.category}</div>
-      <h3 className="mt-2 text-xl font-semibold text-stone-900">{product.name}</h3>
+      <div className="mt-4 text-xs uppercase tracking-[0.3em] text-ink/50">{product.type} • {product.category}</div>
+      <h3 className="mt-2 text-xl font-serif font-semibold text-maroon-deep">{product.name}</h3>
       <div className="mt-3 mb-4">
         {product.discountPrice ? (
-          <div className="flex items-center gap-2 text-lg">
-            <span className="text-stone-400 line-through">₹{product.price}</span>
-            <span className="text-amber-900 font-semibold">₹{product.discountPrice}</span>
+          <div className="flex items-center gap-3 text-lg">
+            <span className="text-ink/40 line-through text-sm">₹{product.price}</span>
+            <span className="text-teal font-semibold">₹{product.discountPrice}</span>
           </div>
         ) : (
-          <div className="text-lg font-semibold">₹{product.price}</div>
+          <div className="text-lg font-semibold text-teal">₹{product.price}</div>
         )}
       </div>
       {product.inStock ? (
         cartItem ? (
           <div className="flex items-center gap-2">
-            <button onClick={() => { const newQty = cartItem.qty - 1; if (newQty <= 0) remove(product.id); else updateQty(product.id, newQty) }} className="flex-1 rounded-full bg-stone-100 py-2 text-sm font-semibold text-stone-700">−</button>
-            <div className="px-4 text-sm font-semibold">{cartItem.qty}</div>
-            <button onClick={() => updateQty(product.id, cartItem.qty + 1)} className="flex-1 rounded-full bg-amber-900 py-2 text-sm font-semibold text-white">+</button>
+            <button onClick={() => { const newQty = cartItem.qty - 1; if (newQty <= 0) remove(product.id); else updateQty(product.id, newQty) }} className="flex-1 rounded-card border border-maroon/10 bg-cream py-2 text-sm font-semibold text-ink">−</button>
+            <div className="px-4 text-sm font-semibold text-ink">{cartItem.qty}</div>
+            <button onClick={() => updateQty(product.id, cartItem.qty + 1)} className="flex-1 rounded-card bg-maroon text-white py-2 text-sm font-semibold hover:bg-maroon-deep">+</button>
           </div>
         ) : (
           <button
             onClick={() => onAdd && onAdd(product)}
-            className={`w-full rounded-full py-2 text-sm font-semibold transition bg-amber-900 text-white hover:bg-amber-800`}>
+            className="w-full rounded-card bg-maroon text-white py-3 text-sm font-semibold transition hover:bg-maroon-deep">
             Add to Cart
           </button>
         )
       ) : (
-        <button className="w-full rounded-full py-2 text-sm font-semibold bg-stone-200 text-stone-500 cursor-not-allowed">Out of Stock</button>
+        <button className="w-full rounded-card bg-stone-100 py-3 text-sm font-semibold text-stone-500 cursor-not-allowed">Out of Stock</button>
       )}
 
       {open && gallery.length > 0 && (

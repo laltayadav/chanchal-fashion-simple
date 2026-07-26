@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Karla:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,8 +8,28 @@
   color-scheme: light;
 }
 
+html {
+  background: #FBF5EA;
+}
+
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #faf7f2;
+  font-family: 'Karla', sans-serif;
+  background: #FBF5EA;
+  color: #2A1B1F;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Cormorant Garamond', serif;
+}
+
+button,
+input,
+textarea {
+  font-family: inherit;
 }
