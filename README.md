@@ -136,6 +136,11 @@ Production readiness requires all of the following:
 2. `npm run build` passes
 3. Manual admin smoke check on desktop and narrow mobile viewport
 
+## Production runbooks
+
+- Day-0 Fly.io launch checklist: `docs/FLYIO_DAY0_LAUNCH_CHECKLIST.md`
+- 5-minute manual backup SOP: `docs/MANUAL_BACKUP_SOP_5_MIN.md`
+
 ## Notes
 
 - The current implementation is a functional scaffold for the storefront and admin areas.
