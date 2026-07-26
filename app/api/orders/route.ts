@@ -45,3 +45,20 @@ export async function POST(req: Request) {
   await saveOrders(orders)
   return NextResponse.json({ id: order.id, timestamp: order.timestamp }, { status: 201 })
 }
+
+export async function DELETE(req: NextRequest) {
+  const auth = await requireAdmin(req)
+  if (auth) return auth
+
+  const url = new URL(req.url)
+  const id = url.searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
+
+  const orders = await getOrders()
+  const idx = orders.findIndex((o) => o.id === id)
+  if (idx === -1) return NextResponse.json({ error: 'not found' }, { status: 404 })
+
+  orders.splice(idx, 1)
+  await saveOrders(orders)
+  return NextResponse.json({ ok: true })
+}

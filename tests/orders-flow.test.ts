@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { NextRequest } from 'next/server'
-import { GET as getOrders, POST as placeOrder } from '../app/api/orders/route'
+import { DELETE as deleteOrder, GET as getOrders, POST as placeOrder } from '../app/api/orders/route'
 import { setupDataSandbox } from './helpers/dataSandbox'
 import { adminCookieHeader } from './helpers/authCookie'
 
@@ -53,5 +53,39 @@ describe('order placement and admin visibility', () => {
     const createRes = await placeOrder(createReq)
     expect(createRes.status).toBe(400)
     await expect(createRes.json()).resolves.toEqual({ error: 'address is required' })
+  })
+
+  it('allows admin to delete an order', async () => {
+    const createReq = new Request('http://localhost/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: [{ productId: 'p1', name: 'Delete Me Saree', qty: 1, unitPrice: 1500 }],
+        total: 1500,
+        name: 'Delete Candidate',
+        phone: '9999999999',
+        address: '42 Test Street',
+      }),
+    })
+
+    const createRes = await placeOrder(createReq)
+    expect(createRes.status).toBe(201)
+    const created = await createRes.json()
+
+    const deleteReq = new NextRequest(`http://localhost/api/orders?id=${encodeURIComponent(created.id)}`, {
+      method: 'DELETE',
+      headers: { Cookie: adminCookieHeader() },
+    })
+    const deleteRes = await deleteOrder(deleteReq)
+    expect(deleteRes.status).toBe(200)
+
+    const listReq = new NextRequest('http://localhost/api/orders', {
+      method: 'GET',
+      headers: { Cookie: adminCookieHeader() },
+    })
+    const listRes = await getOrders(listReq)
+    expect(listRes.status).toBe(200)
+    const orders = await listRes.json()
+    expect(orders.some((order: { id: string }) => order.id === created.id)).toBe(false)
   })
 })
