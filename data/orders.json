@@ -1,1 +1,19 @@
-[]
+[
+  {
+    "id": "8c3c6c9a-55c4-421a-96f5-4418c8116d49",
+    "items": [
+      {
+        "productId": "p1",
+        "name": "Banarasi Silk — Wine Red",
+        "qty": 1,
+        "unitPrice": 3800
+      }
+    ],
+    "total": 3800,
+    "name": "Test User",
+    "phone": "919000000000",
+    "note": "Test order",
+    "timestamp": "2026-07-26T09:15:04.527Z",
+    "status": "new"
+  }
+]

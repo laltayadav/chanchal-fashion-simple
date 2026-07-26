@@ -1,18 +1,40 @@
 [
   {
     "id": "p1",
-    "name": "Banarasi Silk",
+    "type": "Saree",
+    "name": "Banarasi Silk — Wine Red",
     "category": "Silk",
-    "price": 3800,
-    "discountPrice": 3200,
-    "image": ""
+    "price": 4500,
+    "discountPrice": 3800,
+    "image": "https://images.unsplash.com/photo-1610030181087-540965ecca9b?w=800",
+    "inStock": true
   },
   {
     "id": "p2",
-    "name": "Kanjivaram Weave",
-    "category": "Weave",
-    "price": 4500,
-    "discountPrice": 3900,
-    "image": ""
+    "type": "Saree",
+    "name": "Kanjivaram — Peacock Blue",
+    "category": "Silk",
+    "price": 6200,
+    "discountPrice": 0,
+    "image": "https://images.unsplash.com/photo-1610189844429-ba79dfa19a12?w=800",
+    "inStock": true
+  },
+  {
+    "id": "cb88d1a1-f374-4e24-92ba-8382915a00fa",
+    "type": "Saree",
+    "name": "New Product",
+    "category": "Silk",
+    "price": 1000,
+    "discountPrice": 900,
+    "inStock": true
+  },
+  {
+    "id": "f58eef17-bea6-4048-981b-8df619a287bc",
+    "type": "Saree",
+    "name": "New Product",
+    "category": "Silk",
+    "price": 1000,
+    "discountPrice": 900,
+    "inStock": true
   }
 ]

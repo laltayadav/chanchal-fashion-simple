@@ -1,46 +1,63 @@
-import Link from 'next/link';
+"use client"
+import React, { useEffect, useState } from 'react'
+import ProductCard from '../components/ProductCard'
+import { CartProvider, useCart } from '../components/CartContext'
+import { Product } from '../lib/types'
 
-const featuredProducts = [
-  { id: 1, name: 'Banarasi Silk', price: '₹3,800' },
-  { id: 2, name: 'Kanjivaram Weave', price: '₹4,500' },
-];
+function ShopInner() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [type, setType] = useState<'All' | 'Saree' | 'Blouse' | 'Set'>('All')
+  const [category, setCategory] = useState<string>('All')
+  const { add } = useCart()
 
-export default function HomePage() {
+  useEffect(() => {
+    fetch('/api/products')
+      .then((r) => r.json())
+      .then(setProducts)
+  }, [])
+
+  const types = ['All', 'Saree', 'Blouse', 'Set'] as const
+
+  const filtered = products.filter((p) => (type === 'All' ? true : p.type === type))
+  const categories = Array.from(new Set(filtered.map((p) => p.category).filter(Boolean)))
+
+  const final = filtered.filter((p) => (category === 'All' ? true : p.category === category))
+
   return (
-    <main className="min-h-screen bg-stone-50 p-8 text-stone-900">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8">
-        <header className="flex items-center justify-between rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-          <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-amber-700">Chanchal Fashion</p>
-            <h1 className="text-3xl font-semibold">Curated saris for everyday elegance</h1>
-          </div>
-          <nav className="flex gap-4 text-sm font-medium">
-            <Link href="/cart" className="rounded-full bg-stone-900 px-4 py-2 text-white">Cart</Link>
-            <Link href="/admin" className="rounded-full border border-stone-300 px-4 py-2">Admin</Link>
-          </nav>
-        </header>
+    <div className="p-4">
+      <header className="mb-4">
+        <h1 className="text-2xl font-bold">Chanchal — Weave Your Own Story</h1>
+      </header>
 
-        <section className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
-          <div className="rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
-            <p className="mb-3 text-sm uppercase tracking-[0.3em] text-stone-500">Launch ready</p>
-            <h2 className="mb-4 text-2xl font-semibold">A simple store foundation is now in place.</h2>
-            <p className="max-w-2xl text-stone-600">
-              This starter shell includes the storefront, cart, admin pages, and API placeholders for products, orders, and config.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-stone-200 bg-amber-50 p-8 shadow-sm">
-            <h3 className="mb-4 font-semibold">Featured products</h3>
-            <ul className="space-y-3">
-              {featuredProducts.map((product) => (
-                <li key={product.id} className="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm">
-                  <span>{product.name}</span>
-                  <span className="font-medium">{product.price}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+      <div className="mb-4 flex gap-2">
+        {types.map((t) => (
+          <button key={t} onClick={() => { setType(t); setCategory('All') }} className={`px-3 py-1 rounded ${type===t? 'bg-maroon text-white' : 'bg-gray-100'}`}>{t}</button>
+        ))}
       </div>
-    </main>
-  );
+
+      {type !== 'All' && (type === 'Saree' || type === 'Blouse') && (
+        <div className="mb-4 flex gap-2 overflow-auto">
+          <button onClick={() => setCategory('All')} className={`px-2 py-1 rounded ${category==='All'? 'bg-maroon text-white':'bg-gray-100'}`}>All</button>
+          {categories.map((c) => (
+            <button key={c} onClick={() => setCategory(c)} className={`px-2 py-1 rounded ${category===c? 'bg-maroon text-white':'bg-gray-100'}`}>{c}</button>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-4">
+        {final.map((p) => (
+          <ProductCard key={p.id} product={p} onAdd={(prod) => add(prod)} />
+        ))}
+      </div>
+    </div>
+  )
 }
+
+export default function Page() {
+  return (
+    <CartProvider>
+      <ShopInner />
+    </CartProvider>
+  )
+}
+

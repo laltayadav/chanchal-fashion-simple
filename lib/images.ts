@@ -1,16 +1,32 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'fs'
+import path from 'path'
+import sharp from 'sharp'
+import { v4 as uuidv4 } from 'uuid'
 
-const imageDir = path.join(process.cwd(), 'data', 'images');
+// Save optimized product images into `public/uploads` so they are directly
+// served by Next.js as `/uploads/<file>` which simplifies Phase 1.
+const IMAGES_DIR = path.join(process.cwd(), 'public', 'uploads')
 
-export function ensureImageDir() {
-  fs.mkdirSync(imageDir, { recursive: true });
+function ensureImagesDir() {
+  if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true })
 }
 
-export function deleteProductImage(fileName?: string) {
-  if (!fileName) return;
-  const targetPath = path.join(imageDir, fileName);
-  if (fs.existsSync(targetPath)) {
-    fs.unlinkSync(targetPath);
+export async function saveProductImage(buffer: Buffer): Promise<string> {
+  ensureImagesDir()
+  const id = uuidv4()
+  const filename = `${id}.webp`
+  const dest = path.join(IMAGES_DIR, filename)
+  await sharp(buffer).resize({ width: 1000, withoutEnlargement: true }).webp().toFile(dest)
+  // return a public-relative path (omit leading slash so callers can prefix with '/')
+  return `uploads/${filename}`
+}
+
+export async function deleteProductImage(relPath: string): Promise<void> {
+  if (!relPath) return
+  // allow relPath like 'uploads/xxx.webp' or 'data/images/xxx.webp'
+  const candidate = relPath.startsWith('uploads/') ? path.join(process.cwd(), 'public', relPath) : path.join(process.cwd(), relPath)
+  if (fs.existsSync(candidate)) {
+    await fs.promises.unlink(candidate)
   }
 }
+
