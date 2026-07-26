@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import React from 'react'
 import { useCart } from './CartContext'
 
@@ -32,6 +33,7 @@ export default function CartDrawer() {
           ))}
           <div className="pt-2 text-base font-semibold">Total: ₹{total}</div>
           <button onClick={clear} className="w-full rounded-full bg-stone-100 px-3 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-200">Clear cart</button>
+          <Link href="/cart" className="block w-full rounded-full bg-amber-900 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-amber-800">Proceed to WhatsApp order</Link>
         </div>
       )}
     </div>

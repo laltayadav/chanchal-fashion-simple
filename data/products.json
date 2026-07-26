@@ -1,14 +1,49 @@
 [
   {
-    "id": "03033543-216b-4280-b901-86618e0d4b9b",
-    "type": "Saree",
-    "name": "Banarasi - Silk",
-    "category": "SILK",
-    "price": 5999,
-    "discountPrice": 5999,
-    "image": "uploads/3e7e6c64-900c-4fb7-8016-64b5b270cad5.webp",
+    "id": "718ef5e9-44b4-4138-a41f-a36c465f2c3f",
+    "type": "Blouse",
+    "name": "Silver-New",
+    "category": "B1",
+    "price": 1500,
+    "image": "uploads/187e36f1-4be6-4cd4-b162-729bdae8ca42.webp",
     "images": [
-      "uploads/3e7e6c64-900c-4fb7-8016-64b5b270cad5.webp"
+      "uploads/187e36f1-4be6-4cd4-b162-729bdae8ca42.webp"
+    ],
+    "inStock": true
+  },
+  {
+    "id": "736e8c1d-0267-4317-9e51-1ccbcf41d813",
+    "type": "Saree",
+    "name": "Saari - RED",
+    "category": "Silk",
+    "price": 4500,
+    "image": "uploads/24e96d1b-8761-4365-8ddd-6e96f617d32d.webp",
+    "images": [
+      "uploads/24e96d1b-8761-4365-8ddd-6e96f617d32d.webp"
+    ],
+    "inStock": true
+  },
+  {
+    "id": "0a18c152-f0d6-4e97-a3cd-a3094b866f24",
+    "type": "Blouse",
+    "name": "Red _ new",
+    "category": "B2",
+    "price": 600,
+    "image": "uploads/2ca0385c-1048-4fbf-ab56-fbab36977550.webp",
+    "images": [
+      "uploads/2ca0385c-1048-4fbf-ab56-fbab36977550.webp"
+    ],
+    "inStock": true
+  },
+  {
+    "id": "cabcfe1d-94d5-45af-8d38-cb803f25a249",
+    "type": "Saree",
+    "name": "Fastival -set",
+    "category": "S1",
+    "price": 8000,
+    "image": "uploads/da1539a1-13ff-45e5-8cde-d2030540896a.webp",
+    "images": [
+      "uploads/da1539a1-13ff-45e5-8cde-d2030540896a.webp"
     ],
     "inStock": true
   }

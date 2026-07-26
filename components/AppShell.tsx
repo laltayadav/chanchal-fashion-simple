@@ -10,7 +10,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#faf7f2] text-stone-900">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-6 pb-28 sm:px-6 lg:px-8">
         <SiteHeader />
         <main className="mt-6">{children}</main>
         <CartFloating onOpen={() => setShowCart(true)} />

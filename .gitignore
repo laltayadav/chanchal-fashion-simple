@@ -2,3 +2,6 @@ node_modules
 .next
 out
 .env.local
+
+# Ignore generated/uploaded product images
+public/uploads
