@@ -4,7 +4,10 @@
 #
 
 app = 'chanchal-fashion'
-primary_region = 'bom'
+primary_region = 'sin'
+
+[env]
+  UPLOADS_DIR = '/app/public/uploads'
 
 [build]
 [http_service]
@@ -14,6 +17,10 @@ primary_region = 'bom'
   auto_start_machines = true
   min_machines_running = 0
   processes = ['app']
+
+[[mounts]]
+  source = 'uploads_data'
+  destination = '/app/public/uploads'
 
 [[vm]]
   memory = '1gb'

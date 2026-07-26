@@ -8,4 +8,5 @@ out
 !.env.example
 
 # Ignore generated/uploaded product images
-public/uploads
+public/uploads/*
+!public/uploads/.gitkeep
