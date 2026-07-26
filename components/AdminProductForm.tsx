@@ -170,7 +170,7 @@ export function AdminProductForm({ product, onChange, onSave, onDelete, onDelete
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="space-y-2">
           <span className="text-sm font-semibold">Price</span>
-          <input type="number" value={product.price ?? ''} onChange={(e) => onChange({ ...product, price: Number(e.target.value) })} className="w-full rounded-2xl border border-stone-300 px-4 py-3" />
+          <input type="number" value={product.price ?? ''} onChange={(e) => onChange({ ...product, price: e.target.value ? Number(e.target.value) : undefined })} className="w-full rounded-2xl border border-stone-300 px-4 py-3" />
         </label>
         <label className="space-y-2">
           <span className="text-sm font-semibold">Discount Price</span>
