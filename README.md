@@ -92,6 +92,24 @@ Products support additional merchandising and audit metadata:
 Admin product lists prioritize newest activity using `updatedAt` with `createdAt` fallback.
 Storefront provides an explicit sort option (`Featured` or `Newest`) while preserving existing type/category filters.
 
+## Product image upload best practices
+
+The app optimizes uploaded images with `sharp` and stores them as WebP at about 1000px width. To get consistent card and zoom views, prepare source photos with a consistent portrait composition.
+
+Recommended criteria:
+
+- Aspect ratio: `3:4` portrait (for example `1200x1600`)
+- Minimum quality size: `1000px` on the shortest side before upload
+- File type: original `JPG`, `PNG`, or `WebP` (avoid screenshots and re-shared compressed images)
+- Subject framing: keep product centered with small top/bottom breathing room
+- Lighting/background: even lighting and clean, non-distracting background
+
+Why this matters:
+
+- Product cards use a fixed portrait frame to keep the grid aligned.
+- The zoom view shows the full image without forced crop.
+- If source images mix very different aspect ratios/framing, card and zoom can look inconsistent.
+
 ## Order handoff semantics
 
 - Checkout requires `name`, `phone`, and `address` before order submission.

@@ -70,12 +70,12 @@ export default function ProductCard({ product, onAdd }: Props) {
   return (
     <div className={`rounded-card border border-maroon/10 bg-white p-4 shadow-sm transition ${open ? '' : 'hover:-translate-y-1 hover:shadow-md'}`}>
       {displaySrc ? (
-        <div className="relative overflow-hidden rounded-card">
+        <div className="relative overflow-hidden rounded-card bg-stone-100">
           <img
             src={displaySrc}
             alt={product.name}
             onClick={() => gallery.length > 0 && setOpen(true)}
-            className="aspect-[4/3] w-full object-cover cursor-zoom-in"
+            className="aspect-[3/4] w-full object-contain cursor-zoom-in"
           />
           {gallery.length > 1 && (
             <div className="absolute right-3 top-3 rounded-chip bg-white/90 px-3 py-1 text-xs font-semibold text-ink shadow-sm">{gallery.length} images</div>
