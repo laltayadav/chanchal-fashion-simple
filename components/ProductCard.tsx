@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Product } from '../lib/types'
 import { useCart } from './CartContext'
 
@@ -11,6 +12,9 @@ export default function ProductCard({ product, onAdd }: Props) {
   const { items, add, updateQty, remove } = useCart()
   const cartItem = items.find((item) => item.productId === product.id)
   const gallery = (product.images && product.images.length > 0) ? product.images : product.image ? [product.image] : []
+  const productLabel = product.type === 'Set'
+    ? (product.includes || 'Saree + Blouse Set')
+    : (product.category || product.type)
   const displaySrc = gallery.length ? (gallery[0].startsWith('data:') || gallery[0].startsWith('http') ? gallery[0] : `/${gallery[0]}`) : undefined
   const [open, setOpen] = useState(false)
   const [index, setIndex] = useState(0)
@@ -27,6 +31,15 @@ export default function ProductCard({ product, onAdd }: Props) {
   React.useEffect(() => {
     if (index >= gallery.length) setIndex(0)
   }, [gallery.length, index])
+
+  React.useEffect(() => {
+    if (!open) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [open])
 
   // preload selected image and update displayedSrc only after load to avoid flicker
   React.useEffect(() => {
@@ -55,7 +68,7 @@ export default function ProductCard({ product, onAdd }: Props) {
   }, [index, gallery, open])
 
   return (
-    <div className="rounded-card border border-maroon/10 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+    <div className={`rounded-card border border-maroon/10 bg-white p-4 shadow-sm transition ${open ? '' : 'hover:-translate-y-1 hover:shadow-md'}`}>
       {displaySrc ? (
         <div className="relative overflow-hidden rounded-card">
           <img
@@ -71,7 +84,7 @@ export default function ProductCard({ product, onAdd }: Props) {
       ) : (
         <div className="flex h-52 items-center justify-center rounded-card bg-stone-100 text-stone-500">No Image</div>
       )}
-      <div className="mt-4 text-xs uppercase tracking-[0.3em] text-ink/50">{product.type} • {product.category}</div>
+      <div className="mt-4 text-xs uppercase tracking-[0.3em] text-ink/50">{product.type} • {productLabel}</div>
       <h3 className="mt-2 text-xl font-serif font-semibold text-maroon-deep">{product.name}</h3>
       <div className="mt-3 mb-4">
         {product.discountPrice ? (
@@ -101,26 +114,27 @@ export default function ProductCard({ product, onAdd }: Props) {
         <button className="w-full rounded-card bg-stone-100 py-3 text-sm font-semibold text-stone-500 cursor-not-allowed">Out of Stock</button>
       )}
 
-      {open && gallery.length > 0 && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setOpen(false)}>
-          <div className="relative mx-4 w-[min(92vw,900px)] h-[70vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            <div className="w-full h-full flex items-center justify-center rounded-lg bg-white/0">
+      {open && gallery.length > 0 && typeof document !== 'undefined' ? createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setOpen(false)}>
+          <div className="relative flex h-[70vh] w-[min(92vw,900px)] items-center justify-center overflow-hidden rounded-card bg-black/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex h-full w-full items-center justify-center">
               {displayedSrc ? (
-                <img src={displayedSrc} alt="gallery" className="max-h-full max-w-full object-contain rounded-lg" />
+                <img src={displayedSrc} alt="gallery" className="max-h-full max-w-full object-contain" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">Loading image…</div>
+                <div className="flex h-full w-full items-center justify-center text-sm text-white/80">Loading image…</div>
               )}
             </div>
             {gallery.length > 1 && (
               <>
-                <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 px-3 py-2">‹</button>
-                <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 px-3 py-2">›</button>
+                <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-stone-900 shadow">‹</button>
+                <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-2 text-stone-900 shadow">›</button>
               </>
             )}
-            <button onClick={() => setOpen(false)} className="absolute right-3 top-3 rounded-full bg-white/80 px-2 py-1">✕</button>
+            <button onClick={() => setOpen(false)} className="absolute right-3 top-3 rounded-full bg-white/90 px-2 py-1 text-stone-900 shadow">✕</button>
           </div>
-        </div>
-      )}
+        </div>,
+        document.body
+      ) : null}
     </div>
   )
 }

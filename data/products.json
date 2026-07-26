@@ -71,5 +71,18 @@
       "uploads/92ef6274-903d-4f07-91fe-6bd0cc3acd1e.webp"
     ],
     "inStock": true
+  },
+  {
+    "id": "ce778e8a-9ec7-4519-a4cd-37e84f40bd3b",
+    "type": "Blouse",
+    "name": "red-name test",
+    "category": "silk",
+    "price": 5000,
+    "discountPrice": 4500,
+    "image": "uploads/5bcbd9df-384f-43aa-985c-af75645fc192.webp",
+    "images": [
+      "uploads/5bcbd9df-384f-43aa-985c-af75645fc192.webp"
+    ],
+    "inStock": true
   }
 ]

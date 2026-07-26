@@ -10,14 +10,13 @@ export default function CartFloating({ onOpen }: Props) {
   const { items } = useCart()
   const total = items.reduce((s, i) => s + i.unitPrice * i.qty, 0)
 
+  if (items.length === 0) return null
+
   return (
-    <div className="fixed bottom-4 left-1/2 z-40 w-[min(980px,92%)] -translate-x-1/2 rounded-2xl bg-white p-3 shadow-lg xl:hidden">
-      <div className="flex items-center justify-between">
-        <div className="text-sm font-medium">{items.length} item{items.length===1? '': 's'} • ₹{total}</div>
-        <div className="flex gap-2">
-          <button onClick={() => onOpen && onOpen()} className="rounded-full bg-amber-900 px-4 py-2 text-sm font-semibold text-white">View cart</button>
-        </div>
-      </div>
+    <div className="fixed bottom-4 right-4 z-40 md:hidden">
+      <button onClick={() => onOpen && onOpen()} className="rounded-chip border border-maroon/20 bg-white px-4 py-2 text-sm font-semibold text-maroon shadow-lg">
+        {items.length} item{items.length===1? '': 's'} • ₹{total}
+      </button>
     </div>
   )
 }

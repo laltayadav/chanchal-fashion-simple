@@ -1,6 +1,5 @@
 "use client"
 import React, { useEffect, useState } from 'react'
-import Link from 'next/link'
 import ProductCard from '../components/ProductCard'
 import { useCart } from '../components/CartContext'
 import CartDrawer from '../components/CartDrawer'
@@ -12,6 +11,7 @@ function ShopInner() {
   const [type, setType] = useState<'All' | 'Saree' | 'Blouse' | 'Set'>('All')
   const [category, setCategory] = useState<string>('All')
   const { add, items } = useCart()
+  const [showFloatingFilters, setShowFloatingFilters] = useState(false)
 
   useEffect(() => {
     fetch('/api/products')
@@ -19,42 +19,76 @@ function ShopInner() {
       .then(setProducts)
   }, [])
 
+  useEffect(() => {
+    const onScroll = () => setShowFloatingFilters(window.scrollY > 260)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   const types = ['All', 'Saree', 'Blouse', 'Set'] as const
 
+  const getSubcategory = (p: Product) => {
+    const rawCategory = (p.category || '').trim()
+    if (rawCategory) return rawCategory
+    if (p.type === 'Set') {
+      const fromIncludes = (p.includes || '').trim()
+      if (fromIncludes) return fromIncludes
+      return 'Set Collection'
+    }
+    return ''
+  }
+
   const filtered = products.filter((p) => (type === 'All' ? true : p.type === type))
-  const categories = Array.from(new Set(filtered.map((p) => p.category).filter(Boolean)))
-  const final = filtered.filter((p) => (category === 'All' ? true : p.category === category))
+  const categories = Array.from(new Set(filtered.map((p) => getSubcategory(p)).filter(Boolean)))
+  const final = filtered.filter((p) => (category === 'All' ? true : getSubcategory(p) === category))
+  const totalQty = items.reduce((sum, item) => sum + item.qty, 0)
 
   return (
     <div className="space-y-8">
-      <section className="rounded-card border border-maroon/10 bg-cream p-6 shadow-sm">
-        <div className="space-y-3 sm:space-y-4">
-          <div className="text-sm uppercase tracking-[0.35em] text-gold">Chanchal Fashion</div>
-          <h1 className="max-w-3xl text-4xl font-serif font-semibold leading-tight text-maroon-deep sm:text-5xl">Weave Your Own Story with beautifully crafted sarees, blouses, and sets.</h1>
-          <p className="max-w-2xl text-base leading-7 text-ink/75">Handpicked styles, thoughtful details and festive elegance for every celebration. Discover curated pieces made to make every outfit feel special.</p>
+      {showFloatingFilters && (
+        <div className="fixed inset-x-0 top-0 z-40 border-b border-maroon/10 bg-cream/95 px-4 py-3 shadow-sm backdrop-blur md:hidden">
+          <div className="flex gap-2 overflow-x-auto">
+            {types.map((t) => (
+              <button
+                key={`mobile-${t}`}
+                onClick={() => { setType(t); setCategory('All') }}
+                className={`shrink-0 rounded-chip px-4 py-2 text-sm font-medium transition ${type===t ? 'bg-maroon text-white ring-1 ring-maroon-deep/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]' : 'bg-white text-ink shadow-sm hover:bg-cream'}`}>
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
+      )}
+
+      <section className="rounded-card border border-maroon/10 bg-gradient-to-br from-cream via-cream to-gold-soft/20 p-6 shadow-sm">
+        <div className="space-y-3 sm:space-y-4">
+          <h2 className="max-w-3xl text-3xl font-serif font-semibold leading-tight text-maroon-deep sm:text-4xl lg:text-5xl">Handpicked Sarees and Blouses for Every Celebration</h2>
+          <p className="max-w-2xl text-base leading-7 text-ink/75">Explore curated drapes, statement blouses, and complete festive sets designed to make your look effortlessly elegant.</p>
+        </div>
+        <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-maroon/20 to-transparent" />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_320px]">
         <div className="space-y-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="hidden md:flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
               {types.map((t) => (
                 <button
                   key={t}
                   onClick={() => { setType(t); setCategory('All') }}
-                  className={`rounded-chip px-4 py-2 text-sm font-medium transition ${type===t ? 'bg-maroon text-white' : 'bg-white text-ink shadow-sm hover:bg-cream'}`}>
+                  className={`rounded-chip px-4 py-2 text-sm font-medium transition ${type===t ? 'bg-maroon text-white ring-1 ring-maroon-deep/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]' : 'bg-white text-ink shadow-sm hover:bg-cream'}`}>
                   {t}
                 </button>
               ))}
             </div>
           </div>
 
-          {type !== 'All' && (type === 'Saree' || type === 'Blouse') && (
+          {type !== 'All' && (
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => setCategory('All')} className={`rounded-chip px-3 py-2 text-sm font-medium transition ${category==='All'? 'bg-maroon text-white' : 'bg-white text-ink shadow-sm hover:bg-cream'}`}>All</button>
+              <button onClick={() => setCategory('All')} className={`rounded-chip px-3 py-2 text-sm font-medium transition ${category==='All'? 'bg-maroon text-white ring-1 ring-maroon-deep/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]' : 'bg-white text-ink shadow-sm hover:bg-cream'}`}>All</button>
               {categories.map((c) => (
-                <button key={c} onClick={() => setCategory(c)} className={`rounded-chip px-3 py-2 text-sm font-medium transition ${category===c? 'bg-maroon text-white' : 'bg-white text-ink shadow-sm hover:bg-cream'}`}>{c}</button>
+                <button key={c} onClick={() => setCategory(c)} className={`rounded-chip px-3 py-2 text-sm font-medium transition ${category===c? 'bg-maroon text-white ring-1 ring-maroon-deep/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]' : 'bg-white text-ink shadow-sm hover:bg-cream'}`}>{c}</button>
               ))}
             </div>
           )}
@@ -70,6 +104,12 @@ function ShopInner() {
           <CartDrawer />
         </div>
       </section>
+
+      {totalQty > 0 && (
+        <div className="fixed bottom-4 right-4 z-40 hidden rounded-chip border border-maroon/20 bg-white px-4 py-2 text-sm font-semibold text-maroon shadow-lg md:block">
+          {totalQty} item{totalQty === 1 ? '' : 's'} in cart
+        </div>
+      )}
     </div>
   )
 }
