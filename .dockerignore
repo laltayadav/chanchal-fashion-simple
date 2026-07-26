@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# Ignore generated/uploaded product images
+public/uploads
