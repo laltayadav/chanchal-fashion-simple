@@ -11,6 +11,8 @@ WORKDIR /app
 
 # Set production environment
 ENV NODE_ENV="production"
+ENV PORT="3000"
+ENV HOSTNAME="0.0.0.0"
 
 
 # Throw-away build stage to reduce size of final image
@@ -40,9 +42,6 @@ FROM base
 # Copy built application
 COPY --from=build /app /app
 
-# Entrypoint sets up the container.
-ENTRYPOINT [ "/app/docker-entrypoint.js" ]
-
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-CMD [ "npm", "run", "start" ]
+CMD [ "npm", "run", "start", "--", "-H", "0.0.0.0", "-p", "3000" ]
