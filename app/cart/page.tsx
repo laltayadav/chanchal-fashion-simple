@@ -133,6 +133,13 @@ function CartInner() {
           <span className="text-sm font-medium">Note</span>
           <textarea value={note} onChange={(e) => setNote(e.target.value)} className="w-full rounded-2xl border border-stone-300 px-4 py-3" rows={4} />
         </label>
+        <button
+          onClick={submit}
+          disabled={loading || items.length === 0}
+          className="mt-6 w-full rounded-full bg-amber-900 px-6 py-3 text-white transition hover:bg-amber-800 disabled:opacity-50 sm:hidden"
+        >
+          {loading ? 'Submitting…' : 'Send order via WhatsApp'}
+        </button>
       </section>
     </div>
   )
