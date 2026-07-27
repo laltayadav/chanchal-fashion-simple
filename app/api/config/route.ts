@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConfig, saveConfig } from '../../../lib/db'
 import { requireAdmin } from '../../../lib/admin-guard'
+import { normalizeAndValidateWhatsappNumber } from '../../../lib/whatsapp-number'
 
 const ALLOWED_CONFIG_FIELDS = ['shopName', 'whatsapp'] as const
 type AllowedConfigField = (typeof ALLOWED_CONFIG_FIELDS)[number]
@@ -23,6 +24,16 @@ function parseConfigPayload(body: unknown) {
     if (typeof value !== 'string') {
       return { error: `${key} must be a string` }
     }
+
+    if (key === 'whatsapp') {
+      const parsed = normalizeAndValidateWhatsappNumber(value)
+      if (parsed.error) {
+        return { error: parsed.error }
+      }
+      result[key] = parsed.normalized
+      continue
+    }
+
     result[key] = value.trim()
   }
 
@@ -31,9 +42,10 @@ function parseConfigPayload(body: unknown) {
 
 export async function GET() {
   const cfg = await getConfig()
+  const parsedWhatsapp = normalizeAndValidateWhatsappNumber(cfg.whatsapp || '')
   const publicConfig = {
     shopName: cfg.shopName,
-    whatsapp: cfg.whatsapp
+    whatsapp: parsedWhatsapp.normalized
   }
   return NextResponse.json(publicConfig)
 }

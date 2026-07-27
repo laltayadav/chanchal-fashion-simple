@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import { normalizeAndValidateWhatsappNumber } from '../lib/whatsapp-number'
 
 export function AdminSettingsForm() {
   const [name, setName] = useState('')
@@ -20,13 +21,21 @@ export function AdminSettingsForm() {
   }, [])
 
   async function saveSettings() {
+    const parsedWhatsapp = normalizeAndValidateWhatsappNumber(whatsapp)
+    if (parsedWhatsapp.error) {
+      setSettingsMessage(parsedWhatsapp.error)
+      setTimeout(() => setSettingsMessage(''), 3000)
+      return
+    }
+
     const res = await fetch('/api/config', {
       method: 'PUT',
-      body: JSON.stringify({ shopName: name, whatsapp }),
+      body: JSON.stringify({ shopName: name, whatsapp: parsedWhatsapp.normalized }),
       headers: { 'Content-Type': 'application/json' },
     })
 
     if (res.ok) {
+      setWhatsapp(parsedWhatsapp.normalized)
       setSettingsMessage('Shop settings saved.')
     } else {
       const data = await res.json().catch(() => null)
@@ -63,7 +72,7 @@ export function AdminSettingsForm() {
           </label>
           <label className="space-y-2">
             <span className="text-sm font-medium">WhatsApp number</span>
-            <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} className="w-full rounded-2xl border border-stone-300 px-4 py-3" placeholder="919876543210" />
+            <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} className="w-full rounded-2xl border border-stone-300 px-4 py-3" placeholder="10-digit mobile or 91XXXXXXXXXX" />
           </label>
           <button onClick={saveSettings} className="rounded-full bg-amber-900 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-800">Save settings</button>
           {settingsMessage ? <div className="text-sm text-emerald-700">{settingsMessage}</div> : null}

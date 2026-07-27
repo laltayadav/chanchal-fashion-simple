@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useCart } from '../../components/CartContext'
 import AppShell from '../../components/AppShell'
 import { buildOrderWhatsappMessage } from '../../lib/order-whatsapp'
+import { normalizeAndValidateWhatsappNumber } from '../../lib/whatsapp-number'
 
 function CartInner() {
   const { items, remove, updateQty, clear } = useCart()
@@ -17,7 +18,10 @@ function CartInner() {
   useEffect(() => {
     fetch('/api/config')
       .then((r) => r.json())
-      .then((c) => setWhatsapp(c.whatsapp || ''))
+      .then((c) => {
+        const parsedWhatsapp = normalizeAndValidateWhatsappNumber(c.whatsapp || '')
+        setWhatsapp(parsedWhatsapp.normalized)
+      })
       .catch(() => setWhatsapp(''))
   }, [])
 
@@ -46,9 +50,14 @@ function CartInner() {
         note,
       })
       const text = encodeURIComponent(plain)
-      const waNumber = whatsapp || ''
+      const parsedWhatsapp = normalizeAndValidateWhatsappNumber(whatsapp)
+      const waNumber = parsedWhatsapp.normalized
       if (!waNumber) {
         setMessage('WhatsApp number is not configured. Please set it in Admin settings.')
+        return
+      }
+      if (parsedWhatsapp.error) {
+        setMessage(parsedWhatsapp.error)
         return
       }
       const url = `https://wa.me/${waNumber}?text=${text}`
@@ -104,7 +113,7 @@ function CartInner() {
         {message ? <div className="mt-3 rounded-2xl bg-stone-100 p-3 text-sm text-stone-700">{message}</div> : null}
       </section>
 
-      <section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+      <section id="checkout" className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm scroll-mt-24">
         <h2 className="text-lg font-semibold mb-3">Customer details</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-2">

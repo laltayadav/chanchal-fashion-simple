@@ -22,9 +22,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <div className="relative ml-auto w-full max-w-md bg-white p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Cart</h3>
-              <button onClick={() => setShowCart(false)} className="text-stone-700">Close</button>
+              <button onClick={() => setShowCart(false)} className="touch-manipulation text-stone-700">Close</button>
             </div>
-            <CartDrawer />
+            <CartDrawer onProceed={() => setShowCart(false)} />
           </div>
         </div>
       )}

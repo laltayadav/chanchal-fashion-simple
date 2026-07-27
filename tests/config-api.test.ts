@@ -43,6 +43,58 @@ describe('config and security APIs', () => {
     expect(badRes.status).toBe(400)
   })
 
+  it('normalizes 10-digit WhatsApp number to country-code format', async () => {
+    const req = new NextRequest('http://localhost/api/config', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: adminCookieHeader(),
+      },
+      body: JSON.stringify({ whatsapp: '9988776655' }),
+    })
+
+    const res = await updateConfig(req)
+    expect(res.status).toBe(200)
+
+    const updated = readDataFile<any>('config.json')
+    expect(updated.whatsapp).toBe('919988776655')
+  })
+
+  it('rejects invalid WhatsApp number in config update', async () => {
+    const req = new NextRequest('http://localhost/api/config', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: adminCookieHeader(),
+      },
+      body: JSON.stringify({ whatsapp: '+99 37135' }),
+    })
+
+    const res = await updateConfig(req)
+    expect(res.status).toBe(400)
+    await expect(res.json()).resolves.toMatchObject({
+      error: expect.stringContaining('WhatsApp number is invalid'),
+    })
+  })
+
+  it('sanitizes WhatsApp number on GET response', async () => {
+    const req = new NextRequest('http://localhost/api/config', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: adminCookieHeader(),
+      },
+      body: JSON.stringify({ whatsapp: '+91 99887 76655' }),
+    })
+
+    const updateRes = await updateConfig(req)
+    expect(updateRes.status).toBe(200)
+
+    const getRes = await getConfig()
+    const data = await getRes.json()
+    expect(data.whatsapp).toBe('919988776655')
+  })
+
   it('updates admin password through dedicated security endpoint and removes plaintext', async () => {
     const req = new NextRequest('http://localhost/api/admin/security', {
       method: 'PUT',
