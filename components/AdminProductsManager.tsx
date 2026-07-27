@@ -47,14 +47,14 @@ export function AdminProductsManager() {
     if (Array.isArray(payload.images)) {
       const imgs: string[] = payload.images
       const dataUrls = imgs.filter((s) => typeof s === 'string' && s.startsWith('data:'))
-      const remoteUrls = imgs.filter((s) => typeof s === 'string' && !s.startsWith('data:'))
+      const remoteUrls = Array.from(new Set(imgs.filter((s) => typeof s === 'string' && !s.startsWith('data:')).map((s) => s.trim()).filter(Boolean)))
       if (dataUrls.length) {
         payload.imageBase64s = dataUrls.map((d) => d.split(',')[1])
       }
       if (editingId) {
-        const existing = products.find((p) => p.id === editingId)
-        const existingImgs = existing ? (existing.images || (existing.image ? [existing.image] : [])) : []
-        payload.images = [...existingImgs, ...remoteUrls]
+        // For edits, productForm already contains existing images; sending only the current
+        // non-data URLs avoids duplicating entries on repeated saves.
+        payload.images = remoteUrls
       } else {
         payload.images = remoteUrls.length ? remoteUrls : undefined
       }
