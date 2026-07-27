@@ -6,6 +6,7 @@ import CartDrawer from '../components/CartDrawer'
 import { Product } from '../lib/types'
 import AppShell from '../components/AppShell'
 import { sortProductsByRecent } from '../lib/product-recency'
+import { SHOP_LAYOUT_CLASSES } from '../lib/shop-layout'
 
 function ShopInner() {
   const [products, setProducts] = useState<Product[]>([])
@@ -72,7 +73,7 @@ function ShopInner() {
         <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-maroon/20 to-transparent" />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_320px]">
+      <section className={SHOP_LAYOUT_CLASSES.contentWithCart}>
         <div className="space-y-6">
           <div className="hidden md:flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
@@ -110,14 +111,14 @@ function ShopInner() {
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+          <div className={SHOP_LAYOUT_CLASSES.productGrid}>
             {final.map((p) => (
               <ProductCard key={p.id} product={p} onAdd={(prod) => add(prod)} />
             ))}
           </div>
         </div>
 
-        <div className="hidden xl:block">
+        <div className={SHOP_LAYOUT_CLASSES.desktopCartRegion}>
           <CartDrawer />
         </div>
       </section>
