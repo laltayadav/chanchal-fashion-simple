@@ -21,6 +21,7 @@ export interface OrderItem {
   name: string
   qty: number
   unitPrice: number
+  size?: string
 }
 
 export interface Order {

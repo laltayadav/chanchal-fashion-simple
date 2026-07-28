@@ -17,7 +17,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   function add(p: Product) {
     setItems((cur) => {
       const idx = cur.findIndex((i) => i.productId === p.id)
-      if (idx === -1) return [...cur, { productId: p.id, name: p.name, qty: 1, unitPrice: p.discountPrice ?? p.price }]
+      if (idx === -1) return [...cur, { productId: p.id, name: p.name, qty: 1, unitPrice: p.discountPrice ?? p.price, size: p.size }]
       const copy = [...cur]
       copy[idx].qty += 1
       return copy

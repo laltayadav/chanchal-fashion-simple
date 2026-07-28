@@ -35,7 +35,10 @@ export function buildOrderWhatsappMessage(input: BuildOrderWhatsappMessageInput)
     `Phone: ${input.phone.trim()}`,
     formatLabeledMultiline('Address', input.address),
     'Items:',
-    ...input.items.map((item) => `${item.qty}x ${item.name} - ₹${item.unitPrice}`),
+    ...input.items.map((item) => {
+      const sizeSuffix = item.size && item.size.trim().length > 0 ? ` (Size: ${item.size.trim()})` : ''
+      return `${item.qty}x ${item.name}${sizeSuffix} - ₹${item.unitPrice}`
+    }),
     `Total: ₹${input.total}`,
     noteLine,
   ].join('\n')

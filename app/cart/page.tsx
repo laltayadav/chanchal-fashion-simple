@@ -88,6 +88,7 @@ function CartInner() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="font-semibold">{item.name}</div>
+                    {item.size ? <div className="text-sm text-stone-500">Size: {item.size}</div> : null}
                     <div className="text-sm text-stone-500">₹{item.unitPrice} each</div>
                   </div>
                   <div className="flex items-center gap-2">

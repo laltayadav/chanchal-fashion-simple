@@ -31,4 +31,18 @@ describe('order WhatsApp message builder', () => {
     expect(message).toContain('\n  Flat 42')
     expect(message).toContain('\n  Near market')
   })
+
+  it('includes item size in the WhatsApp message', () => {
+    const message = buildOrderWhatsappMessage({
+      name: 'Customer Name',
+      phone: '9999999999',
+      address: '221B Baker Street',
+      items: [{ productId: 'p1', name: 'Test Saree', qty: 2, unitPrice: 1200, size: 'Free Size' }],
+      total: 2400,
+      note: '',
+    })
+
+    expect(message).toContain('2x Test Saree')
+    expect(message).toContain('Size: Free Size')
+  })
 })
