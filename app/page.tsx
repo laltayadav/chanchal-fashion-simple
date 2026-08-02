@@ -5,8 +5,10 @@ import { useCart } from '../components/CartContext'
 import CartDrawer from '../components/CartDrawer'
 import { Product } from '../lib/types'
 import AppShell from '../components/AppShell'
-import { DEFAULT_NEW_ARRIVAL_WINDOW_DAYS, isProductNewArrival, sortProductsByRecent } from '../lib/product-recency'
+import { ProductGridSkeleton } from '../components/LoadingStates'
+import { DEFAULT_NEW_ARRIVAL_WINDOW_DAYS, isProductNewArrival, sortProductsByCreatedAt, sortProductsByRecent } from '../lib/product-recency'
 import { SHOP_LAYOUT_CLASSES } from '../lib/shop-layout'
+import { useDelayedFlag } from '../lib/useDelayedFlag'
 
 function ShopInner() {
   const [products, setProducts] = useState<Product[]>([])
@@ -15,24 +17,47 @@ function ShopInner() {
   const [browseMode, setBrowseMode] = useState<'all' | 'new'>('all')
   const [sortBy, setSortBy] = useState<'featured' | 'newest'>('featured')
   const [newArrivalWindowDays, setNewArrivalWindowDays] = useState(DEFAULT_NEW_ARRIVAL_WINDOW_DAYS)
+  const [loadingInitial, setLoadingInitial] = useState(true)
   const { add, items } = useCart()
+  const showInitialLoader = useDelayedFlag(loadingInitial)
 
   useEffect(() => {
-    fetch('/api/products')
-      .then((r) => r.json())
-      .then(setProducts)
+    let cancelled = false
 
-    fetch('/api/config')
-      .then((r) => r.json())
-      .then((cfg) => {
-        const parsed = Number(cfg?.newArrivalWindowDays)
-        if (!Number.isFinite(parsed)) return
-        const normalized = Math.max(1, Math.min(365, Math.trunc(parsed)))
-        setNewArrivalWindowDays(normalized)
-      })
-      .catch(() => {
+    async function load() {
+      const [productsResult, configResult] = await Promise.allSettled([
+        fetch('/api/products').then((r) => r.json()),
+        fetch('/api/config').then((r) => r.json()),
+      ])
+
+      if (cancelled) return
+
+      if (productsResult.status === 'fulfilled') {
+        setProducts(Array.isArray(productsResult.value) ? productsResult.value : [])
+      }
+
+      if (configResult.status === 'fulfilled') {
+        const parsed = Number(configResult.value?.newArrivalWindowDays)
+        if (Number.isFinite(parsed)) {
+          const normalized = Math.max(1, Math.min(365, Math.trunc(parsed)))
+          setNewArrivalWindowDays(normalized)
+        }
+      } else {
         setNewArrivalWindowDays(DEFAULT_NEW_ARRIVAL_WINDOW_DAYS)
-      })
+      }
+
+      setLoadingInitial(false)
+    }
+
+    load().catch(() => {
+      if (cancelled) return
+      setLoadingInitial(false)
+      setNewArrivalWindowDays(DEFAULT_NEW_ARRIVAL_WINDOW_DAYS)
+    })
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const types = ['All', 'Saree', 'Blouse', 'Set', 'Kurti'] as const
@@ -55,7 +80,7 @@ function ShopInner() {
   const filtered = byNewArrival.filter((p) => (type === 'All' ? true : p.type === type))
   const categories = Array.from(new Set(filtered.map((p) => getSubcategory(p)).filter(Boolean)))
   const categoryFiltered = filtered.filter((p) => (category === 'All' ? true : getSubcategory(p) === category))
-  const final = sortBy === 'newest' ? sortProductsByRecent(categoryFiltered) : categoryFiltered
+  const final = sortBy === 'newest' ? sortProductsByRecent(categoryFiltered) : sortProductsByCreatedAt(categoryFiltered)
   const totalQty = items.reduce((sum, item) => sum + item.qty, 0)
 
   return (
@@ -149,11 +174,15 @@ function ShopInner() {
             </div>
           )}
 
-          <div className={SHOP_LAYOUT_CLASSES.productGrid}>
-            {final.map((p) => (
-              <ProductCard key={p.id} product={p} onAdd={(prod) => add(prod)} />
-            ))}
-          </div>
+          {showInitialLoader ? (
+            <ProductGridSkeleton />
+          ) : (
+            <div className={SHOP_LAYOUT_CLASSES.productGrid}>
+              {final.map((p) => (
+                <ProductCard key={p.id} product={p} onAdd={(prod) => add(prod)} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className={SHOP_LAYOUT_CLASSES.desktopCartRegion}>

@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     images: images.length > 0 ? images : undefined,
     includes: body.includes,
     inStock: body.inStock !== false,
-    newArrivalEnabled: body.newArrivalEnabled !== false,
+    newArrivalEnabled: body.newArrivalEnabled === true,
     newArrivalUntil: normalizeNewArrivalUntil(body.newArrivalUntil),
     createdAt: now,
     updatedAt: now,

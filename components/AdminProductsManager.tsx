@@ -1,9 +1,11 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { InlineSpinner, SectionSkeleton } from './LoadingStates'
 import { Product } from '../lib/types'
 import { AdminProductForm } from './AdminProductForm'
 import { DEFAULT_NEW_ARRIVAL_WINDOW_DAYS, formatAbsoluteDate, formatNewArrivalUntil, formatRelativeAge, getNewArrivalAttentionState, sortProductsByRecent } from '../lib/product-recency'
+import { useDelayedFlag } from '../lib/useDelayedFlag'
 
 function defaultProduct(): Partial<Product> {
   return {
@@ -15,7 +17,7 @@ function defaultProduct(): Partial<Product> {
     discountPrice: undefined,
     image: '',
     inStock: true,
-    newArrivalEnabled: true,
+    newArrivalEnabled: false,
     newArrivalUntil: undefined,
   }
 }
@@ -25,18 +27,45 @@ export function AdminProductsManager() {
   const [newArrivalWindowDays, setNewArrivalWindowDays] = useState(DEFAULT_NEW_ARRIVAL_WINDOW_DAYS)
   const [productForm, setProductForm] = useState<Partial<Product>>(defaultProduct())
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [loadingInitial, setLoadingInitial] = useState(true)
   const [savingProduct, setSavingProduct] = useState(false)
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(null)
   const [message, setMessage] = useState('')
+  const showInitialLoader = useDelayedFlag(loadingInitial)
 
   useEffect(() => {
-    fetch('/api/products').then((r) => r.json()).then(setProducts)
-    fetch('/api/config')
-      .then((r) => r.json())
-      .then((cfg) => {
-        const parsed = Number(cfg?.newArrivalWindowDays)
-        if (!Number.isFinite(parsed)) return
-        setNewArrivalWindowDays(Math.max(1, Math.min(365, Math.trunc(parsed))))
-      })
+    let cancelled = false
+
+    async function load() {
+      const [productsResult, configResult] = await Promise.allSettled([
+        fetch('/api/products').then((r) => r.json()),
+        fetch('/api/config').then((r) => r.json()),
+      ])
+
+      if (cancelled) return
+
+      if (productsResult.status === 'fulfilled') {
+        setProducts(Array.isArray(productsResult.value) ? productsResult.value : [])
+      }
+
+      if (configResult.status === 'fulfilled') {
+        const parsed = Number(configResult.value?.newArrivalWindowDays)
+        if (Number.isFinite(parsed)) {
+          setNewArrivalWindowDays(Math.max(1, Math.min(365, Math.trunc(parsed))))
+        }
+      }
+
+      setLoadingInitial(false)
+    }
+
+    load().catch(() => {
+      if (cancelled) return
+      setLoadingInitial(false)
+    })
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const sortedProducts = useMemo(() => sortProductsByRecent(products), [products])
@@ -140,7 +169,9 @@ export function AdminProductsManager() {
   }
 
   async function deleteProduct(id: string) {
+    setDeletingProductId(id)
     const res = await fetch(`/api/products?id=${id}`, { method: 'DELETE' })
+    setDeletingProductId(null)
     if (res.ok) {
       setProducts((cur) => cur.filter((p) => p.id !== id))
       if (editingId === id) {
@@ -154,8 +185,8 @@ export function AdminProductsManager() {
   }
 
   return (
-    <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-      <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+    <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+      <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm lg:flex lg:max-h-[calc(100vh-9rem)] lg:flex-col">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold">Products</h2>
@@ -164,9 +195,12 @@ export function AdminProductsManager() {
           <button onClick={() => { setEditingId(null); setProductForm(defaultProduct()); setMessage('') }} className="rounded-full border border-amber-900 px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-50">New product</button>
         </div>
 
-        <div className="mt-4 space-y-3">
-          {sortedProducts.length === 0 ? <div className="text-sm text-stone-500">No products yet.</div> : null}
-          {sortedProducts.map((product) => (
+        <div className="mt-4 space-y-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
+          {showInitialLoader ? (
+            <SectionSkeleton lines={5} className="border-0 bg-transparent p-0 shadow-none" />
+          ) : null}
+          {!showInitialLoader && sortedProducts.length === 0 ? <div className="text-sm text-stone-500">No products yet.</div> : null}
+          {!showInitialLoader && sortedProducts.map((product) => (
             <div key={product.id} className="flex flex-col gap-3 rounded-3xl border border-stone-200 bg-stone-50 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="font-semibold">{product.name}</div>
@@ -198,7 +232,18 @@ export function AdminProductsManager() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <button onClick={() => startEdit(product)} className="rounded-full border border-amber-900 px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-50">Edit</button>
-                <button onClick={() => deleteProduct(product.id)} className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">Delete</button>
+                <button
+                  onClick={() => deleteProduct(product.id)}
+                  disabled={deletingProductId === product.id}
+                  className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                >
+                  {deletingProductId === product.id ? (
+                    <span className="inline-flex items-center gap-2">
+                      <InlineSpinner />
+                      Deleting…
+                    </span>
+                  ) : 'Delete'}
+                </button>
               </div>
             </div>
           ))}
@@ -206,15 +251,18 @@ export function AdminProductsManager() {
         {message ? <div className="mt-4 rounded-3xl bg-stone-100 p-4 text-sm text-stone-700">{message}</div> : null}
       </div>
 
-      <AdminProductForm
-        product={productForm}
-        onChange={setProductForm}
-        onSave={saveProduct}
-        onDelete={editingId ? () => deleteProduct(editingId) : undefined}
-        onDeleteImage={handleDeleteImage}
-        saving={savingProduct}
-        newArrivalWindowDays={newArrivalWindowDays}
-      />
+      <div className="lg:sticky lg:top-24">
+        <AdminProductForm
+          product={productForm}
+          onChange={setProductForm}
+          onSave={saveProduct}
+          onDelete={editingId ? () => deleteProduct(editingId) : undefined}
+          onDeleteImage={handleDeleteImage}
+          saving={savingProduct}
+          deleting={editingId ? deletingProductId === editingId : false}
+          newArrivalWindowDays={newArrivalWindowDays}
+        />
+      </div>
     </section>
   )
 }

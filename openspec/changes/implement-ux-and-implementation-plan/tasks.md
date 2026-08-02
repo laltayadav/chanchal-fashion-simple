@@ -30,6 +30,10 @@
 
 ## 7. QA and Cleanup
 
-- [ ] 7.1 Test form flows: create product (with image), edit product, delete product
-- [ ] 7.2 Test order flow: add to cart, submit order, check `data/orders.json` and WhatsApp link
-- [ ] 7.3 Run `npm run build` and fix any TypeScript or runtime errors
+- [x] 7.1 Test form flows: create product (with image), edit product, delete product
+- [x] 7.2 Test order flow: add to cart, submit order, check `data/orders.json` and WhatsApp link
+- [x] 7.3 Run `npm run build` and fix any TypeScript or runtime errors
+
+## 8. Admin UX Follow-up
+
+- [x] 8.1 Make admin product list scrollable on large product catalogs to improve edit flow

@@ -10,3 +10,7 @@ out
 # Ignore generated/uploaded product images
 public/uploads/*
 !public/uploads/.gitkeep
+
+# Ignore private local runtime JSON data
+.local-data/
+dev-data/

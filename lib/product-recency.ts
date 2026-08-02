@@ -34,6 +34,21 @@ export function sortProductsByRecent(products: Product[]) {
   })
 }
 
+export function sortProductsByCreatedAt(products: Product[]) {
+  return [...products].sort((left, right) => {
+    const leftTs = toTimestamp(left.createdAt)
+    const rightTs = toTimestamp(right.createdAt)
+
+    const leftHas = Number.isFinite(leftTs)
+    const rightHas = Number.isFinite(rightTs)
+    if (leftHas && rightHas) return rightTs - leftTs
+    if (leftHas) return -1
+    if (rightHas) return 1
+
+    return left.id.localeCompare(right.id)
+  })
+}
+
 export function formatAbsoluteDate(value?: string) {
   if (!value) return 'N/A'
   const date = new Date(value)

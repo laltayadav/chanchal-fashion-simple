@@ -81,6 +81,7 @@ touch data/images/.gitkeep
 ```bash
 cat > .env.local << 'EOF'
 ADMIN_SESSION_SECRET=replace-with-a-long-random-secret-at-least-32-chars
+DATA_DIR=.local-data
 EOF
 
 echo ".env.local" >> .gitignore
@@ -92,12 +93,21 @@ Generate a secure session secret quickly:
 node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 ```
 
+`DATA_DIR=.local-data` keeps your private runtime products, orders, and config out of the tracked repo `data/` seed files.
+This is the recommended local workflow if you do not want local JSON changes to influence production bootstrap content.
+
 ## 6. Build the data/image helper libraries
 
 Create these two files before wiring up API routes — everything else imports from them:
 
 - `lib/db.ts` — lowdb wrapper, one `openDb()` helper reused for products/orders/config
 - `lib/images.ts` — `saveProductImage()` (resize to ~1000px wide, convert to WebP via sharp) and `deleteProductImage()` (called on product update/delete to avoid orphaned files)
+
+Runtime data ownership notes:
+
+- Repo `data/` files are bootstrap/seed inputs.
+- Local runtime state should live in `.local-data/` or another untracked directory.
+- `orders.json` should be treated as runtime-only data, not sample seed content.
 
 ## 7. Run it locally
 

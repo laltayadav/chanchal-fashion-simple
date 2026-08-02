@@ -32,6 +32,14 @@ Production:
 - Do not commit production secrets to the repository.
 - Rotate the secret if it is ever exposed (rotation invalidates existing admin session cookies).
 
+`DATA_DIR` controls where mutable JSON runtime data is read and written.
+
+Recommended usage:
+
+- Local development with private working data: set `DATA_DIR=.local-data`
+- Fly production: keep `DATA_DIR=/data` on the mounted volume
+- Do not use repo-tracked `data/` files as your private day-to-day order store
+
 ## Admin password troubleshooting
 
 Admin login uses a hashed password stored in `data/config.json` as `adminPasswordHash`.
@@ -79,7 +87,22 @@ Notes:
 - app/ — Next.js App Router pages and API routes
 - components/ — reusable UI components
 - lib/ — helper modules for JSON data and image handling
-- data/ — seed JSON files for products, orders, and config
+- data/ — bundled seed/bootstrap JSON files
+
+## Runtime JSON ownership
+
+This project now treats bundled seed files and runtime data as different concerns.
+
+- `data/` in the repo is bootstrap content, not the preferred long-term runtime store.
+- Production runtime data must live on the mounted Fly volume at `/data`.
+- Local private test data should live in an untracked directory such as `.local-data`.
+- `orders.json` is runtime-only data and is not seeded from bundled repo files when mounted runtime storage is initialized.
+
+Example local setup:
+
+```bash
+DATA_DIR=.local-data
+```
 
 ## Product metadata
 
@@ -181,7 +204,9 @@ fly deploy
 
 Notes:
 
-- On first boot with a new `DATA_DIR` volume, bundled `data/*.json` files are auto-seeded once.
+- On first boot with a new `DATA_DIR` volume, only explicitly allowed bootstrap files are seeded from bundled `data/` files.
+- `orders.json` is initialized as empty runtime data and is never copied from bundled repo content into mounted runtime storage.
+- If mounted runtime files are missing, the app emits startup warnings so the bootstrap event is visible to operators.
 - Fly volumes are attached per machine and are not shared across multiple running machines.
    If you need multi-instance writes, use an external database (for example Postgres/Turso).
 

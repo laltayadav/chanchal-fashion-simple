@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatAbsoluteDate, formatRelativeAge, getNewArrivalAttentionState, isProductNewArrival, sortProductsByRecent } from '../lib/product-recency'
+import { formatAbsoluteDate, formatRelativeAge, getNewArrivalAttentionState, isProductNewArrival, sortProductsByCreatedAt, sortProductsByRecent } from '../lib/product-recency'
 import { Product } from '../lib/types'
 
 describe('product recency UI helpers', () => {
@@ -36,6 +36,59 @@ describe('product recency UI helpers', () => {
 
     const sorted = sortProductsByRecent(products)
     expect(sorted.map((p) => p.id)).toEqual(['c', 'a', 'b'])
+  })
+
+  it('sorts customer default list by createdAt and ignores updatedAt bumps', () => {
+    const products: Product[] = [
+      {
+        id: 'older-updated',
+        type: 'Saree',
+        name: 'Older Edited',
+        category: 'Silk',
+        price: 1000,
+        inStock: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-08-01T00:00:00.000Z',
+      },
+      {
+        id: 'newer-created',
+        type: 'Saree',
+        name: 'Newly Added',
+        category: 'Silk',
+        price: 1000,
+        inStock: true,
+        createdAt: '2026-07-01T00:00:00.000Z',
+        updatedAt: '2026-07-01T00:00:00.000Z',
+      },
+    ]
+
+    const sorted = sortProductsByCreatedAt(products)
+    expect(sorted.map((p) => p.id)).toEqual(['newer-created', 'older-updated'])
+  })
+
+  it('uses deterministic fallback when createdAt is missing or invalid', () => {
+    const products: Product[] = [
+      {
+        id: 'b',
+        type: 'Kurti',
+        name: 'No Created At 2',
+        category: 'Daily Wear',
+        price: 900,
+        inStock: true,
+      },
+      {
+        id: 'a',
+        type: 'Kurti',
+        name: 'No Created At 1',
+        category: 'Daily Wear',
+        price: 850,
+        inStock: true,
+        createdAt: 'invalid-date',
+      },
+    ]
+
+    const sorted = sortProductsByCreatedAt(products)
+    expect(sorted.map((p) => p.id)).toEqual(['a', 'b'])
   })
 
   it('formats relative and absolute dates for admin display', () => {

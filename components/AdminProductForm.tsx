@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react'
+import { InlineSpinner } from './LoadingStates'
 import { Product, ProductType } from '../lib/types'
 import { formatNewArrivalUntil, getNewArrivalAttentionState } from '../lib/product-recency'
 
@@ -11,6 +12,7 @@ type Props = {
   onDelete?: () => void
   onDeleteImage?: (imgPath: string) => void
   saving?: boolean
+  deleting?: boolean
   newArrivalWindowDays?: number
 }
 
@@ -23,7 +25,7 @@ function toDateInput(value?: string) {
   return d.toISOString().slice(0, 10)
 }
 
-export function AdminProductForm({ product, onChange, onSave, onDelete, onDeleteImage, saving, newArrivalWindowDays }: Props) {
+export function AdminProductForm({ product, onChange, onSave, onDelete, onDeleteImage, saving, deleting, newArrivalWindowDays }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [preview, setPreview] = useState('')
   const [thumbs, setThumbs] = useState<string[]>([])
@@ -180,7 +182,7 @@ export function AdminProductForm({ product, onChange, onSave, onDelete, onDelete
         <label className="space-y-2">
           <span className="text-sm font-semibold">Include in New Arrivals</span>
           <select
-            value={product.newArrivalEnabled === false ? 'false' : 'true'}
+            value={product.newArrivalEnabled === true ? 'true' : 'false'}
             onChange={(e) => onChange({ ...product, newArrivalEnabled: e.target.value === 'true' })}
             className="w-full rounded-2xl border border-stone-300 px-4 py-3"
           >
@@ -228,12 +230,22 @@ export function AdminProductForm({ product, onChange, onSave, onDelete, onDelete
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
         {onDelete ? (
-          <button type="button" onClick={onDelete} className="rounded-full border border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700 hover:bg-red-100">
-            Delete
+          <button type="button" disabled={Boolean(deleting)} onClick={onDelete} className="rounded-full border border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50">
+            {deleting ? (
+              <span className="inline-flex items-center gap-2">
+                <InlineSpinner />
+                Deleting…
+              </span>
+            ) : 'Delete'}
           </button>
         ) : null}
         <button type="button" onClick={onSave} disabled={saving} className="rounded-full bg-amber-900 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-800 disabled:opacity-50">
-          {saving ? 'Saving…' : 'Save product'}
+          {saving ? (
+            <span className="inline-flex items-center gap-2">
+              <InlineSpinner className="text-white" />
+              Saving…
+            </span>
+          ) : 'Save product'}
         </button>
       </div>
     </div>

@@ -87,6 +87,19 @@ Implement tasks from an OpenSpec change.
    - If all done: suggest archive
    - If paused: explain why and wait for guidance
 
+   8. **Run production push confidence gate before declaring release-ready**
+
+      Before saying a change is safe to push/deploy, run a confidence assessment:
+      - Execute at minimum: `npm run test` and `npm run build`
+      - Run scope-aware critical-path checks (routes/APIs touched by the change)
+      - If the change touches runtime JSON, data-layer bootstrap, or deploy storage config, explicitly verify repo/local JSON cannot replace production runtime data
+      - Summarize confidence as: `High` / `Medium` / `Low`
+      - Provide recommendation: `Go` / `Go with caution` / `Do not push`
+
+      If confidence is not `High`, explicitly list residual risks and missing checks.
+      If JSON ownership is ambiguous, do not declare the change release-ready.
+      Use the `production-push-confidence` skill when available.
+
 **Output During Implementation**
 
 ```
@@ -116,6 +129,20 @@ Working on task 4/7: <task description>
 ...
 
 All tasks complete! Ready to archive this change.
+
+### Production Push Confidence
+
+Confidence: <High|Medium|Low>
+Recommendation: <Go|Go with caution|Do not push>
+
+Checks passed:
+- <item>
+
+Residual risks:
+- <item>
+
+JSON runtime ownership:
+- <item>
 ```
 
 **Output On Pause (Issue Encountered)**
@@ -147,6 +174,8 @@ What would you like to do?
 - Update task checkbox immediately after completing each task
 - Pause on errors, blockers, or unclear requirements - don't guess
 - Use contextFiles from CLI output, don't assume specific file names
+- Run and report production push confidence before declaring release-ready
+- Treat local/repo JSON runtime ownership as a mandatory part of release readiness when data-layer or deploy-storage changes are involved
 
 **Fluid Workflow Integration**
 

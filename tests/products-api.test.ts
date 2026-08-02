@@ -20,7 +20,6 @@ describe('products API CRUD', () => {
         category: 'Printed',
         size: 'Free Size',
         price: 2500,
-        newArrivalEnabled: true,
         newArrivalUntil: '2026-08-20',
       }),
     })
@@ -31,7 +30,7 @@ describe('products API CRUD', () => {
     expect(created.id).toBeDefined()
     expect(created.size).toBe('Free Size')
     expect(created.type).toBe('Kurti')
-    expect(created.newArrivalEnabled).toBe(true)
+    expect(created.newArrivalEnabled).toBe(false)
     expect(created.newArrivalUntil).toContain('T23:59:59.999Z')
     expect(created.createdAt).toBeDefined()
     expect(created.updatedAt).toBeDefined()
@@ -63,9 +62,27 @@ describe('products API CRUD', () => {
     expect(updated.inStock).toBe(false)
     expect(updated.images).toEqual(['https://example.com/a.webp', 'https://example.com/b.webp'])
     expect(updated.image).toBe('https://example.com/a.webp')
+    expect(updated.newArrivalEnabled).toBe(true)
     expect(updated.newArrivalUntil).toBeUndefined()
     expect(updated.createdAt).toBe(created.createdAt)
     expect(Date.parse(updated.updatedAt)).toBeGreaterThanOrEqual(Date.parse(created.updatedAt))
+
+    const disableNewArrivalReq = new NextRequest('http://localhost/api/products', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: adminCookieHeader(),
+      },
+      body: JSON.stringify({
+        id: created.id,
+        newArrivalEnabled: false,
+      }),
+    })
+
+    const disableNewArrivalRes = await updateProduct(disableNewArrivalReq)
+    expect(disableNewArrivalRes.status).toBe(200)
+    const disabled = await disableNewArrivalRes.json()
+    expect(disabled.newArrivalEnabled).toBe(false)
 
     const deleteReq = new NextRequest(`http://localhost/api/products?id=${created.id}`, {
       method: 'DELETE',

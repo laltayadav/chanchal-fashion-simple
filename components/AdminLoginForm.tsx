@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { InlineSpinner } from './LoadingStates'
 
 export default function AdminLoginForm() {
   const router = useRouter()
@@ -58,7 +59,12 @@ export default function AdminLoginForm() {
         disabled={loading}
         className="w-full rounded-full bg-amber-900 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-800 disabled:opacity-50"
       >
-        {loading ? 'Unlocking…' : 'Unlock'}
+        {loading ? (
+          <span className="inline-flex items-center gap-2">
+            <InlineSpinner className="text-white" />
+            Unlocking…
+          </span>
+        ) : 'Unlock'}
       </button>
       {message ? <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm text-red-700">{message}</div> : null}
     </div>

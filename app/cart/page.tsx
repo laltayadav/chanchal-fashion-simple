@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useCart } from '../../components/CartContext'
 import AppShell from '../../components/AppShell'
+import { InlineSpinner } from '../../components/LoadingStates'
 import { buildOrderWhatsappMessage } from '../../lib/order-whatsapp'
 import { normalizeAndValidateWhatsappNumber } from '../../lib/whatsapp-number'
 
@@ -107,7 +108,12 @@ function CartInner() {
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xl font-semibold">Total: ₹{total}</div>
           <button onClick={submit} disabled={loading || items.length === 0} className="rounded-full bg-amber-900 px-6 py-3 text-white transition hover:bg-amber-800 disabled:opacity-50">
-            {loading ? 'Submitting…' : 'Send order via WhatsApp'}
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <InlineSpinner className="text-white" />
+                Submitting…
+              </span>
+            ) : 'Send order via WhatsApp'}
           </button>
         </div>
 
@@ -139,7 +145,12 @@ function CartInner() {
           disabled={loading || items.length === 0}
           className="mt-6 w-full rounded-full bg-amber-900 px-6 py-3 text-white transition hover:bg-amber-800 disabled:opacity-50 sm:hidden"
         >
-          {loading ? 'Submitting…' : 'Send order via WhatsApp'}
+          {loading ? (
+            <span className="inline-flex items-center gap-2">
+              <InlineSpinner className="text-white" />
+              Submitting…
+            </span>
+          ) : 'Send order via WhatsApp'}
         </button>
       </section>
     </div>

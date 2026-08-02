@@ -3,11 +3,16 @@
 Purpose: create fast, repeatable backups for JSON data before deploys and once daily.
 
 Scope:
-- data/products.json
-- data/orders.json
-- data/config.json
-- data/admin-auth.json
+- runtime `products.json`
+- runtime `orders.json`
+- runtime `config.json`
+- runtime `admin-auth.json`
 - public/uploads (if product images are stored there)
+
+Important:
+- In production, back up the mounted runtime data directory (for this repo: `/data`).
+- Do not assume repo-tracked `data/*.json` files are the current production source of truth.
+- `orders.json` is runtime-owned business data and must be backed up from runtime storage, not from bundled seed files.
 
 Frequency:
 - Mandatory: before every deploy
