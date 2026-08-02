@@ -8,6 +8,28 @@ type Props = {
   onAdd?: (product: Product) => void
 }
 
+function resolveImageSrc(src: string) {
+  if (!src) return undefined
+  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('blob:')) {
+    return src
+  }
+  if (src.startsWith('/')) return src
+  return `/${src}`
+}
+
+function optimizeRemoteCardSrc(src: string) {
+  if (!src.startsWith('http://') && !src.startsWith('https://')) return src
+  try {
+    const url = new URL(src)
+    if (!url.searchParams.has('w')) url.searchParams.set('w', '640')
+    if (!url.searchParams.has('q')) url.searchParams.set('q', '70')
+    if (!url.searchParams.has('auto')) url.searchParams.set('auto', 'format')
+    return url.toString()
+  } catch {
+    return src
+  }
+}
+
 export default function ProductCard({ product, onAdd }: Props) {
   const { items, add, updateQty, remove } = useCart()
   const cartItem = items.find((item) => item.productId === product.id)
@@ -15,14 +37,33 @@ export default function ProductCard({ product, onAdd }: Props) {
   const productLabel = product.type === 'Set'
     ? (product.includes || 'Saree + Blouse Set')
     : (product.category || product.type)
-  const displaySrc = gallery.length ? (gallery[0].startsWith('data:') || gallery[0].startsWith('http') ? gallery[0] : `/${gallery[0]}`) : undefined
+  const displaySrc = gallery.length ? resolveImageSrc(gallery[0]) : undefined
+  const cardSrc = displaySrc ? optimizeRemoteCardSrc(displaySrc) : undefined
   const [open, setOpen] = useState(false)
   const [index, setIndex] = useState(0)
   const [displayedSrc, setDisplayedSrc] = useState<string | undefined>(undefined)
   const [loadingImage, setLoadingImage] = useState(false)
+  const [touchStartX, setTouchStartX] = useState<number | null>(null)
 
   function next() { if (gallery.length === 0) return; setIndex((i) => (i + 1) % gallery.length) }
   function prev() { if (gallery.length === 0) return; setIndex((i) => (i - 1 + gallery.length) % gallery.length) }
+
+  function onTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    if (gallery.length <= 1) return
+    setTouchStartX(event.touches[0]?.clientX ?? null)
+  }
+
+  function onTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
+    if (gallery.length <= 1 || touchStartX === null) return
+    const endX = event.changedTouches[0]?.clientX
+    setTouchStartX(null)
+    if (typeof endX !== 'number') return
+    const deltaX = endX - touchStartX
+    const threshold = 40
+    if (Math.abs(deltaX) < threshold) return
+    if (deltaX < 0) next()
+    else prev()
+  }
 
   React.useEffect(() => {
     if (open) setIndex(0)
@@ -46,7 +87,8 @@ export default function ProductCard({ product, onAdd }: Props) {
     if (!open || gallery.length === 0) return
     const src = gallery[index]
     if (!src) return
-    const resolved = src.startsWith('http') || src.startsWith('data:') ? src : `/${src}`
+    const resolved = resolveImageSrc(src)
+    if (!resolved) return
     // if currently displayed is same, nothing to do
     if (resolved === displayedSrc) return
     setLoadingImage(true)
@@ -72,9 +114,12 @@ export default function ProductCard({ product, onAdd }: Props) {
       {displaySrc ? (
         <div className="relative overflow-hidden rounded-card bg-stone-100">
           <img
-            src={displaySrc}
+            src={cardSrc}
             alt={product.name}
             onClick={() => gallery.length > 0 && setOpen(true)}
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
             className="aspect-[3/4] w-full object-contain cursor-zoom-in"
           />
           {gallery.length > 1 && (
@@ -117,7 +162,12 @@ export default function ProductCard({ product, onAdd }: Props) {
 
       {open && gallery.length > 0 && typeof document !== 'undefined' ? createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setOpen(false)}>
-          <div className="relative flex h-[70vh] w-[min(92vw,900px)] items-center justify-center overflow-hidden rounded-card bg-black/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative flex h-[70vh] w-[min(92vw,900px)] items-center justify-center overflow-hidden rounded-card bg-black/10 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+          >
             <div className="flex h-full w-full items-center justify-center">
               {displayedSrc ? (
                 <img src={displayedSrc} alt="gallery" className="max-h-full max-w-full object-contain" />

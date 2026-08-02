@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Product } from '../lib/types'
 import { AdminProductForm } from './AdminProductForm'
-import { formatAbsoluteDate, formatRelativeAge, sortProductsByRecent } from '../lib/product-recency'
+import { DEFAULT_NEW_ARRIVAL_WINDOW_DAYS, formatAbsoluteDate, formatNewArrivalUntil, formatRelativeAge, getNewArrivalAttentionState, sortProductsByRecent } from '../lib/product-recency'
 
 function defaultProduct(): Partial<Product> {
   return {
@@ -15,11 +15,14 @@ function defaultProduct(): Partial<Product> {
     discountPrice: undefined,
     image: '',
     inStock: true,
+    newArrivalEnabled: true,
+    newArrivalUntil: undefined,
   }
 }
 
 export function AdminProductsManager() {
   const [products, setProducts] = useState<Product[]>([])
+  const [newArrivalWindowDays, setNewArrivalWindowDays] = useState(DEFAULT_NEW_ARRIVAL_WINDOW_DAYS)
   const [productForm, setProductForm] = useState<Partial<Product>>(defaultProduct())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [savingProduct, setSavingProduct] = useState(false)
@@ -27,6 +30,13 @@ export function AdminProductsManager() {
 
   useEffect(() => {
     fetch('/api/products').then((r) => r.json()).then(setProducts)
+    fetch('/api/config')
+      .then((r) => r.json())
+      .then((cfg) => {
+        const parsed = Number(cfg?.newArrivalWindowDays)
+        if (!Number.isFinite(parsed)) return
+        setNewArrivalWindowDays(Math.max(1, Math.min(365, Math.trunc(parsed))))
+      })
   }, [])
 
   const sortedProducts = useMemo(() => sortProductsByRecent(products), [products])
@@ -162,6 +172,23 @@ export function AdminProductsManager() {
                 <div className="font-semibold">{product.name}</div>
                 <div className="text-sm text-stone-600">{product.type} • {product.category}</div>
                 {product.size ? <div className="text-xs text-stone-500">Size: {product.size}</div> : null}
+                {(() => {
+                  const newArrivalState = getNewArrivalAttentionState(product, newArrivalWindowDays)
+                  const isAlert = newArrivalState === 'expiring' || newArrivalState === 'expired'
+                  const stateText = newArrivalState === 'active'
+                    ? 'Active'
+                    : newArrivalState === 'expiring'
+                      ? 'Expiring soon'
+                      : newArrivalState === 'expired'
+                        ? 'Expired'
+                        : 'Inactive'
+
+                  return (
+                    <div className={`mt-1 text-xs ${isAlert ? 'font-semibold text-red-700' : 'text-stone-500'}`}>
+                      New arrivals: {stateText} • Until: {formatNewArrivalUntil(product, newArrivalWindowDays)}
+                    </div>
+                  )
+                })()}
                 <div className="mt-1 text-xs text-stone-500">
                   Added: {formatAbsoluteDate(product.createdAt)} ({formatRelativeAge(product.createdAt)})
                 </div>
@@ -186,6 +213,7 @@ export function AdminProductsManager() {
         onDelete={editingId ? () => deleteProduct(editingId) : undefined}
         onDeleteImage={handleDeleteImage}
         saving={savingProduct}
+        newArrivalWindowDays={newArrivalWindowDays}
       />
     </section>
   )

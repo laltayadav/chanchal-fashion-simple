@@ -1,4 +1,4 @@
-export type ProductType = 'Saree' | 'Blouse' | 'Set'
+export type ProductType = 'Saree' | 'Blouse' | 'Set' | 'Kurti'
 
 export interface Product {
   id: string
@@ -12,6 +12,8 @@ export interface Product {
   images?: string[]
   includes?: string
   inStock: boolean
+  newArrivalEnabled?: boolean
+  newArrivalUntil?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -39,6 +41,7 @@ export interface Order {
 export type Config = {
   shopName?: string
   whatsapp?: string
+  newArrivalWindowDays?: number
   adminPassword?: string
   adminPasswordHash?: string
 }

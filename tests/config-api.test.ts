@@ -13,6 +13,7 @@ describe('config and security APIs', () => {
     const data = await res.json()
 
     expect(data.shopName).toBeDefined()
+    expect(data.newArrivalWindowDays).toBe(30)
     expect(data.adminPassword).toBeUndefined()
     expect(data.adminPasswordHash).toBeUndefined()
   })
@@ -24,7 +25,7 @@ describe('config and security APIs', () => {
         'Content-Type': 'application/json',
         Cookie: adminCookieHeader(),
       },
-      body: JSON.stringify({ shopName: 'New Name', whatsapp: '9988776655' }),
+      body: JSON.stringify({ shopName: 'New Name', whatsapp: '9988776655', newArrivalWindowDays: 45 }),
     })
 
     const validRes = await updateConfig(validReq)
@@ -41,6 +42,35 @@ describe('config and security APIs', () => {
 
     const badRes = await updateConfig(badReq)
     expect(badRes.status).toBe(400)
+  })
+
+  it('accepts valid new-arrival window and rejects invalid values', async () => {
+    const validReq = new NextRequest('http://localhost/api/config', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: adminCookieHeader(),
+      },
+      body: JSON.stringify({ newArrivalWindowDays: 21 }),
+    })
+
+    const validRes = await updateConfig(validReq)
+    expect(validRes.status).toBe(200)
+
+    const updated = readDataFile<any>('config.json')
+    expect(updated.newArrivalWindowDays).toBe(21)
+
+    const invalidReq = new NextRequest('http://localhost/api/config', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: adminCookieHeader(),
+      },
+      body: JSON.stringify({ newArrivalWindowDays: 0 }),
+    })
+
+    const invalidRes = await updateConfig(invalidReq)
+    expect(invalidRes.status).toBe(400)
   })
 
   it('normalizes 10-digit WhatsApp number to country-code format', async () => {

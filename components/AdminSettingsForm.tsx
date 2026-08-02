@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { normalizeAndValidateWhatsappNumber } from '../lib/whatsapp-number'
+import { DEFAULT_NEW_ARRIVAL_WINDOW_DAYS } from '../lib/product-recency'
 
 export function AdminSettingsForm() {
   const [name, setName] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
+  const [newArrivalWindowDays, setNewArrivalWindowDays] = useState(DEFAULT_NEW_ARRIVAL_WINDOW_DAYS)
   const [adminPassword, setAdminPassword] = useState('')
   const [settingsMessage, setSettingsMessage] = useState('')
   const [securityMessage, setSecurityMessage] = useState('')
@@ -16,6 +18,8 @@ export function AdminSettingsForm() {
       .then((c) => {
         setName(c.shopName || '')
         setWhatsapp(c.whatsapp || '')
+        const parsed = Number(c.newArrivalWindowDays)
+        setNewArrivalWindowDays(Number.isFinite(parsed) ? Math.max(1, Math.min(365, Math.trunc(parsed))) : DEFAULT_NEW_ARRIVAL_WINDOW_DAYS)
       })
       .catch(() => {})
   }, [])
@@ -28,14 +32,17 @@ export function AdminSettingsForm() {
       return
     }
 
+    const normalizedWindow = Math.max(1, Math.min(365, Math.trunc(Number(newArrivalWindowDays) || DEFAULT_NEW_ARRIVAL_WINDOW_DAYS)))
+
     const res = await fetch('/api/config', {
       method: 'PUT',
-      body: JSON.stringify({ shopName: name, whatsapp: parsedWhatsapp.normalized }),
+      body: JSON.stringify({ shopName: name, whatsapp: parsedWhatsapp.normalized, newArrivalWindowDays: normalizedWindow }),
       headers: { 'Content-Type': 'application/json' },
     })
 
     if (res.ok) {
       setWhatsapp(parsedWhatsapp.normalized)
+      setNewArrivalWindowDays(normalizedWindow)
       setSettingsMessage('Shop settings saved.')
     } else {
       const data = await res.json().catch(() => null)
@@ -73,6 +80,17 @@ export function AdminSettingsForm() {
           <label className="space-y-2">
             <span className="text-sm font-medium">WhatsApp number</span>
             <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} className="w-full rounded-2xl border border-stone-300 px-4 py-3" placeholder="10-digit mobile or 91XXXXXXXXXX" />
+          </label>
+          <label className="space-y-2">
+            <span className="text-sm font-medium">New arrivals window (days)</span>
+            <input
+              type="number"
+              min={1}
+              max={365}
+              value={newArrivalWindowDays}
+              onChange={(e) => setNewArrivalWindowDays(Number(e.target.value) || DEFAULT_NEW_ARRIVAL_WINDOW_DAYS)}
+              className="w-full rounded-2xl border border-stone-300 px-4 py-3"
+            />
           </label>
           <button onClick={saveSettings} className="rounded-full bg-amber-900 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-800">Save settings</button>
           {settingsMessage ? <div className="text-sm text-emerald-700">{settingsMessage}</div> : null}

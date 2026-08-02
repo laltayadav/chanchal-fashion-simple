@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { getProducts, saveProducts } from '../../../lib/db'
 import { saveProductImage, deleteProductImage } from '../../../lib/images'
 import { requireAdmin } from '../../../lib/admin-guard'
-import { normalizeProductRecency } from '../../../lib/product-recency'
+import { normalizeNewArrivalUntil, normalizeProductRecency } from '../../../lib/product-recency'
 import { Product } from '../../../lib/types'
 
 export async function GET() {
@@ -52,6 +52,8 @@ export async function POST(req: NextRequest) {
     images: images.length > 0 ? images : undefined,
     includes: body.includes,
     inStock: body.inStock !== false,
+    newArrivalEnabled: body.newArrivalEnabled !== false,
+    newArrivalUntil: normalizeNewArrivalUntil(body.newArrivalUntil),
     createdAt: now,
     updatedAt: now,
   }
@@ -105,6 +107,12 @@ export async function PUT(req: NextRequest) {
   existing.discountPrice = body.discountPrice !== undefined ? Number(body.discountPrice) : existing.discountPrice
   existing.includes = body.includes ?? existing.includes
   existing.inStock = body.inStock !== undefined ? Boolean(body.inStock) : existing.inStock
+  if (body.newArrivalEnabled !== undefined) {
+    existing.newArrivalEnabled = Boolean(body.newArrivalEnabled)
+  }
+  if (body.newArrivalUntil !== undefined) {
+    existing.newArrivalUntil = normalizeNewArrivalUntil(body.newArrivalUntil)
+  }
   existing.createdAt = existing.createdAt || new Date().toISOString()
   existing.updatedAt = new Date().toISOString()
   products[idx] = existing

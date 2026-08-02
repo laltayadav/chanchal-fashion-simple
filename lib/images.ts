@@ -16,7 +16,11 @@ export async function saveProductImage(buffer: Buffer): Promise<string> {
   const id = uuidv4()
   const filename = `${id}.webp`
   const dest = path.join(IMAGES_DIR, filename)
-  await sharp(buffer).resize({ width: 1000, withoutEnlargement: true }).webp().toFile(dest)
+  await sharp(buffer)
+    .rotate()
+    .resize({ width: 1000, withoutEnlargement: true, fit: 'inside' })
+    .webp({ quality: 82, effort: 4 })
+    .toFile(dest)
   // return a public-relative path (omit leading slash so callers can prefix with '/')
   return `uploads/${filename}`
 }

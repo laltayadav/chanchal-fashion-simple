@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { Product, ProductType } from '../lib/types'
+import { formatNewArrivalUntil, getNewArrivalAttentionState } from '../lib/product-recency'
 
 type Props = {
   product: Partial<Product>
@@ -10,11 +11,19 @@ type Props = {
   onDelete?: () => void
   onDeleteImage?: (imgPath: string) => void
   saving?: boolean
+  newArrivalWindowDays?: number
 }
 
-const productTypes: ProductType[] = ['Saree', 'Blouse', 'Set']
+const productTypes: ProductType[] = ['Saree', 'Blouse', 'Set', 'Kurti']
 
-export function AdminProductForm({ product, onChange, onSave, onDelete, onDeleteImage, saving }: Props) {
+function toDateInput(value?: string) {
+  if (!value) return ''
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toISOString().slice(0, 10)
+}
+
+export function AdminProductForm({ product, onChange, onSave, onDelete, onDeleteImage, saving, newArrivalWindowDays }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [preview, setPreview] = useState('')
   const [thumbs, setThumbs] = useState<string[]>([])
@@ -167,6 +176,39 @@ export function AdminProductForm({ product, onChange, onSave, onDelete, onDelete
           />
         </label>
       </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="space-y-2">
+          <span className="text-sm font-semibold">Include in New Arrivals</span>
+          <select
+            value={product.newArrivalEnabled === false ? 'false' : 'true'}
+            onChange={(e) => onChange({ ...product, newArrivalEnabled: e.target.value === 'true' })}
+            className="w-full rounded-2xl border border-stone-300 px-4 py-3"
+          >
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </label>
+        <label className="space-y-2">
+          <span className="text-sm font-semibold">New arrival until (manual override)</span>
+          <input
+            type="date"
+            value={toDateInput(product.newArrivalUntil)}
+            onChange={(e) => onChange({ ...product, newArrivalUntil: e.target.value || undefined })}
+            className="w-full rounded-2xl border border-stone-300 px-4 py-3"
+          />
+        </label>
+      </div>
+      {product.id ? (() => {
+        const typedProduct = product as Product
+        const state = getNewArrivalAttentionState(typedProduct, newArrivalWindowDays)
+        const isAlert = state === 'expiring' || state === 'expired'
+        const stateText = state === 'active' ? 'Active' : state === 'expiring' ? 'Expiring soon' : state === 'expired' ? 'Expired' : 'Inactive'
+        return (
+          <div className={`rounded-2xl border px-4 py-3 text-sm ${isAlert ? 'border-red-300 bg-red-50 text-red-700' : 'border-stone-200 bg-stone-50 text-stone-700'}`}>
+            New arrivals status: {stateText} • Until: {formatNewArrivalUntil(typedProduct, newArrivalWindowDays)}
+          </div>
+        )
+      })() : null}
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="space-y-2">
           <span className="text-sm font-semibold">Price</span>

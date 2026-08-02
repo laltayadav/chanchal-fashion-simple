@@ -1,5 +1,8 @@
 import { Product } from './types'
 
+export const DEFAULT_NEW_ARRIVAL_WINDOW_DAYS = 30
+export const DEFAULT_EXPIRING_SOON_DAYS = 3
+
 function toTimestamp(value?: string) {
   if (!value) return Number.NaN
   const ts = Date.parse(value)
@@ -72,4 +75,80 @@ export function normalizeProductRecency(product: Product) {
   }
 
   return product
+}
+
+function parseWindowDays(value?: number) {
+  const raw = Number(value)
+  if (!Number.isFinite(raw)) return DEFAULT_NEW_ARRIVAL_WINDOW_DAYS
+  const rounded = Math.trunc(raw)
+  if (rounded < 1) return DEFAULT_NEW_ARRIVAL_WINDOW_DAYS
+  if (rounded > 365) return 365
+  return rounded
+}
+
+function parseManualUntil(value?: string) {
+  if (!value) return Number.NaN
+  const trimmed = value.trim()
+  if (!trimmed) return Number.NaN
+
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(trimmed)
+  if (dateOnly) {
+    return Date.parse(`${trimmed}T23:59:59.999Z`)
+  }
+
+  return Date.parse(trimmed)
+}
+
+export function normalizeNewArrivalUntil(value?: string) {
+  if (!value) return undefined
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(trimmed)
+  if (dateOnly) {
+    return `${trimmed}T23:59:59.999Z`
+  }
+
+  const ts = Date.parse(trimmed)
+  if (!Number.isFinite(ts)) return undefined
+  return new Date(ts).toISOString()
+}
+
+export function getNewArrivalUntilTimestamp(product: Product, windowDays?: number) {
+  if (product.newArrivalEnabled === false) return Number.NaN
+
+  const manual = parseManualUntil(product.newArrivalUntil)
+  if (Number.isFinite(manual)) return manual
+
+  const created = toTimestamp(product.createdAt)
+  if (!Number.isFinite(created)) return Number.NaN
+
+  const days = parseWindowDays(windowDays)
+  return created + days * 24 * 60 * 60 * 1000
+}
+
+export function isProductNewArrival(product: Product, now = Date.now(), windowDays?: number) {
+  const untilTs = getNewArrivalUntilTimestamp(product, windowDays)
+  if (!Number.isFinite(untilTs)) return false
+  return now <= untilTs
+}
+
+export function getNewArrivalAttentionState(product: Product, windowDays?: number, now = Date.now(), expiringSoonDays = DEFAULT_EXPIRING_SOON_DAYS) {
+  if (product.newArrivalEnabled === false) return 'inactive' as const
+
+  const untilTs = getNewArrivalUntilTimestamp(product, windowDays)
+  if (!Number.isFinite(untilTs)) return 'inactive' as const
+
+  if (now > untilTs) return 'expired' as const
+
+  const soonWindowMs = Math.max(1, Math.trunc(expiringSoonDays)) * 24 * 60 * 60 * 1000
+  if (untilTs - now <= soonWindowMs) return 'expiring' as const
+
+  return 'active' as const
+}
+
+export function formatNewArrivalUntil(product: Product, windowDays?: number) {
+  const ts = getNewArrivalUntilTimestamp(product, windowDays)
+  if (!Number.isFinite(ts)) return 'N/A'
+  return new Date(ts).toLocaleDateString()
 }

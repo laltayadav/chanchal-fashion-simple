@@ -15,11 +15,13 @@ describe('products API CRUD', () => {
         Cookie: adminCookieHeader(),
       },
       body: JSON.stringify({
-        type: 'Saree',
-        name: 'New Saree',
-        category: 'Silk',
+        type: 'Kurti',
+        name: 'New Kurti',
+        category: 'Printed',
         size: 'Free Size',
         price: 2500,
+        newArrivalEnabled: true,
+        newArrivalUntil: '2026-08-20',
       }),
     })
 
@@ -28,6 +30,9 @@ describe('products API CRUD', () => {
     const created = await createRes.json()
     expect(created.id).toBeDefined()
     expect(created.size).toBe('Free Size')
+    expect(created.type).toBe('Kurti')
+    expect(created.newArrivalEnabled).toBe(true)
+    expect(created.newArrivalUntil).toContain('T23:59:59.999Z')
     expect(created.createdAt).toBeDefined()
     expect(created.updatedAt).toBeDefined()
     expect(created.createdAt).toBe(created.updatedAt)
@@ -40,19 +45,25 @@ describe('products API CRUD', () => {
       },
       body: JSON.stringify({
         id: created.id,
-        name: 'Updated Saree',
+        name: 'Updated Kurti',
         category: 'Designer',
         size: 'XL',
         inStock: false,
+        images: ['https://example.com/a.webp', 'https://example.com/b.webp'],
+        newArrivalEnabled: true,
+        newArrivalUntil: '',
       }),
     })
 
     const updateRes = await updateProduct(updateReq)
     expect(updateRes.status).toBe(200)
     const updated = await updateRes.json()
-    expect(updated.name).toBe('Updated Saree')
+    expect(updated.name).toBe('Updated Kurti')
     expect(updated.size).toBe('XL')
     expect(updated.inStock).toBe(false)
+    expect(updated.images).toEqual(['https://example.com/a.webp', 'https://example.com/b.webp'])
+    expect(updated.image).toBe('https://example.com/a.webp')
+    expect(updated.newArrivalUntil).toBeUndefined()
     expect(updated.createdAt).toBe(created.createdAt)
     expect(Date.parse(updated.updatedAt)).toBeGreaterThanOrEqual(Date.parse(created.updatedAt))
 
