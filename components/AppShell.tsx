@@ -4,12 +4,15 @@ import { ReactNode, useState } from 'react'
 import { SiteHeader } from './SiteHeader'
 import CartFloating from './CartFloating'
 import CartDrawer from './CartDrawer'
+import { getSiteStructuredData } from '../lib/site-identity'
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const [showCart, setShowCart] = useState(false)
+  const structuredData = JSON.stringify(getSiteStructuredData()).replace(/</g, '\\u003c')
 
   return (
     <div className="min-h-screen bg-[#faf7f2] text-stone-900">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
       <div className="mx-auto max-w-7xl px-4 py-6 pb-28 sm:px-6 lg:px-8">
         <SiteHeader />
         <main className="mt-6">{children}</main>

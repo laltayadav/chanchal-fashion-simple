@@ -32,6 +32,8 @@ Production:
 - Do not commit production secrets to the repository.
 - Rotate the secret if it is ever exposed (rotation invalidates existing admin session cookies).
 
+`GOOGLE_SITE_VERIFICATION` is optional. Set it to the Google Search Console HTML verification token to emit the corresponding verification meta tag. Keep the value in the hosting environment or an untracked local environment file; do not commit it.
+
 `DATA_DIR` controls where mutable JSON runtime data is read and written.
 
 Recommended usage:
@@ -88,6 +90,25 @@ Notes:
 - components/ — reusable UI components
 - lib/ — helper modules for JSON data and image handling
 - data/ — bundled seed/bootstrap JSON files
+
+## Search indexing and compatibility
+
+The canonical production origin is `https://chanchalfashion.com`. Next.js generates `/robots.txt` and `/sitemap.xml`; the sitemap contains only the public home and shop routes. Admin, API, and cart paths are excluded from crawling. Search Console ownership verification is optional through `GOOGLE_SITE_VERIFICATION`.
+
+SEO rollout must preserve the existing route and navigation contract:
+
+- Public: `/`, `/shop`, and `/cart`; the header's Shop and Cart links remain `/shop` and `/cart`.
+- Admin: `/admin`, `/admin/products`, `/admin/orders`, and `/admin/settings`.
+- CRUD/API: `/api/products`, `/api/orders`, `/api/config`, and existing upload/admin endpoints.
+- Product CRUD and order creation/deletion regressions are covered by `tests/products-api.test.ts` and `tests/orders-flow.test.ts`; config/admin behavior is covered by `tests/config-api.test.ts` and `tests/admin-auth.test.ts`.
+
+Before an SEO release, run `npm run test` and `npm run build`, then smoke-test the public and admin routes, the SEO endpoints, and product/order/admin CRUD. Any regression blocks release.
+
+### SEO rollout status and rollback
+
+The local technical baseline is implemented and verified: robots and sitemap return successfully, canonical metadata and minimal Organization/WebSite JSON-LD render on the storefront, and the existing route/navigation and CRUD regression checks pass. Search Console verification and sitemap submission are owner-operated after deployment. No contact, address, shipping, cancellation, returns, refund, privacy, or terms details have been owner-verified, so no trust/policy pages or related promises are published yet.
+
+Before launch, deploy the additive SEO changes and verify the production canonical origin, `/robots.txt`, `/sitemap.xml`, and rendered structured data. If an SEO change causes a regression, roll back only the SEO additions (`app/robots.ts`, `app/sitemap.ts`, `lib/site-identity.ts`, and their metadata/JSON-LD wiring in `app/layout.tsx` and `components/AppShell.tsx`); unset `GOOGLE_SITE_VERIFICATION` if needed. Re-run the release gate afterward. Do not roll back or overwrite runtime data, product/order/config CRUD, existing routes, or storefront navigation as part of an SEO rollback.
 
 ## Runtime JSON ownership
 

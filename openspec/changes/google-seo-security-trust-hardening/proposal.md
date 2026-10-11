@@ -1,3 +1,7 @@
+# Consolidation notice
+
+Do not implement this change in parallel with `seo-and-customer-trust-baseline`. The SEO indexing, metadata, structured-data, and trust-page scope is consolidated into that focused baseline, which explicitly preserves existing CRUD operations and site navigation. This broader change is on hold; its security-header and contact-input-hardening scope is deferred to a separately scoped proposal after the SEO baseline is complete.
+
 ## Why
 
 The storefront needs stronger technical SEO and trust posture to improve Google discoverability, indexing quality, and buyer confidence for an e-commerce journey. At the same time, security controls must be tightened to reduce XSS, clickjacking, mixed-content, and secret-exposure risks before growth traffic increases.

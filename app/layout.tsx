@@ -1,9 +1,10 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import RootProviders from '../components/RootProviders';
+import { SITE_ORIGIN } from '../lib/site-identity'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://chanchalfashion.com'),
+  metadataBase: new URL(SITE_ORIGIN),
   title: {
     default: 'Chanchal Fashion | Elegant Sarees and Blouses',
     template: '%s | Chanchal Fashion',
@@ -31,6 +32,9 @@ export const metadata: Metadata = {
     description: 'Curated sarees, statement blouses, and festive sets for your next celebration.',
     images: ['/opengraph-image'],
   },
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
   icons: [
     {
       rel: 'icon',

@@ -1,3 +1,7 @@
+# On hold — consolidation notice
+
+Do not execute these tasks in parallel with `seo-and-customer-trust-baseline`. SEO/trust work is tracked in that focused change. Security headers and contact-input hardening are deferred and must be proposed separately with their own integration and regression plan.
+
 ## 1. SEO Indexing Foundation
 
 - [ ] 1.1 Add `app/sitemap.ts` to generate canonical product, home, and legal URLs from existing data sources.

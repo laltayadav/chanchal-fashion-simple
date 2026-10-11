@@ -11,6 +11,14 @@ The system SHALL expose public crawl/index artifacts for search engines, includi
 - **WHEN** a crawler requests the sitemap
 - **THEN** the sitemap returns canonical URLs for public pages and excludes admin-only paths
 
+#### Scenario: SEO routes are additive
+- **WHEN** robots, sitemap, metadata, or verification support is introduced
+- **THEN** existing storefront, admin, and API route paths and their navigation destinations remain unchanged
+
+#### Scenario: Existing navigation is preserved
+- **WHEN** public SEO or trust links are added
+- **THEN** existing home, shop, cart, and admin navigation links retain their current destinations and behavior
+
 ### Requirement: Search verification readiness
 The system SHALL support search engine site verification metadata without requiring code rewrites for each verification cycle.
 
