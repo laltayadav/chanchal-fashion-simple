@@ -14,8 +14,113 @@ describe('config and security APIs', () => {
 
     expect(data.shopName).toBeDefined()
     expect(data.newArrivalWindowDays).toBe(30)
+    expect(data.homepageTitle).toBe('Weave Your Own Story')
+    expect(data.homepageDescription).toContain('elegant sarees')
+    expect(data.homepageImage).toBe('')
+    expect(data.homepageImages).toEqual([])
     expect(data.adminPassword).toBeUndefined()
     expect(data.adminPasswordHash).toBeUndefined()
+  })
+
+  it('saves homepage copy while preserving legacy config compatibility', async () => {
+    const req = new NextRequest('http://localhost/api/config', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: adminCookieHeader(),
+      },
+      body: JSON.stringify({
+        homepageTitle: '  Festive elegance  ',
+        homepageDescription: 'Discover a new collection.',
+        homepageImage: '',
+      }),
+    })
+
+    const res = await updateConfig(req)
+    expect(res.status).toBe(200)
+
+    const updated = await getConfig()
+    const data = await updated.json()
+    expect(data.homepageTitle).toBe('Festive elegance')
+    expect(data.homepageDescription).toBe('Discover a new collection.')
+    expect(data.homepageImage).toBe('')
+    expect(data.homepageImages).toEqual([])
+    expect(data.adminPassword).toBeUndefined()
+  })
+
+  it('rejects unauthenticated homepage updates without changing config', async () => {
+    const before = readDataFile<any>('config.json')
+    const req = new NextRequest('http://localhost/api/config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ homepageTitle: 'Unauthorized change' }),
+    })
+
+    const res = await updateConfig(req)
+    expect(res.status).toBe(401)
+    expect(readDataFile<any>('config.json')).toEqual(before)
+  })
+
+  it('rejects invalid homepage image paths, image payloads, and overlong copy', async () => {
+    const invalidPayloads = [
+      { homepageImage: 'https://example.com/image.webp' },
+      { homepageImageDataUrl: 'data:image/svg+xml;base64,PHN2Zz4=' },
+      { homepageImages: ['uploads/valid.webp', 'https://example.com/image.webp'] },
+      { homepageImages: Array.from({ length: 6 }, () => 'uploads/valid.webp') },
+      { homepageSlides: [{ image: 'uploads/valid.webp', title: 'x'.repeat(91) }] },
+      { homepageSlides: [{ image: 'uploads/valid.webp', description: 'x'.repeat(221) }] },
+      { homepageTitle: '  ' },
+      { homepageDescription: '  ' },
+      { homepageTitle: 'x'.repeat(91) },
+      { homepageDescription: 'x'.repeat(221) },
+    ]
+
+    for (const payload of invalidPayloads) {
+      const req = new NextRequest('http://localhost/api/config', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: adminCookieHeader(),
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const res = await updateConfig(req)
+      expect(res.status).toBe(400)
+    }
+  })
+
+  it('persists slide copy with its image order and returns the configured order', async () => {
+    const req = new NextRequest('http://localhost/api/config', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: adminCookieHeader(),
+      },
+      body: JSON.stringify({
+        homepageTitle: 'Master collection',
+        homepageDescription: 'The master description.',
+        homepageSlides: [
+          { image: 'uploads/second.webp', title: 'Second slide', description: '' },
+          { image: 'uploads/first.webp', title: '', description: 'First image description' },
+        ],
+      }),
+    })
+
+    const res = await updateConfig(req)
+    expect(res.status).toBe(200)
+
+    const config = readDataFile<any>('config.json')
+    expect(config.homepageSlides).toEqual([
+      { image: 'uploads/second.webp', title: 'Second slide', description: '' },
+      { image: 'uploads/first.webp', title: '', description: 'First image description' },
+    ])
+    expect(config.homepageImages).toEqual(['uploads/second.webp', 'uploads/first.webp'])
+    expect(config.homepageImage).toBe('uploads/second.webp')
+
+    const publicRes = await getConfig()
+    const publicConfig = await publicRes.json()
+    expect(publicConfig.homepageSlides).toEqual(config.homepageSlides)
   })
 
   it('accepts allowlisted config fields and rejects unknown fields', async () => {

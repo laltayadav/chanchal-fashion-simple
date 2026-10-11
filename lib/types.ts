@@ -42,8 +42,19 @@ export type Config = {
   shopName?: string
   whatsapp?: string
   newArrivalWindowDays?: number
+  homepageTitle?: string
+  homepageDescription?: string
+  homepageImage?: string
+  homepageImages?: string[]
+  homepageSlides?: HomepageSlide[]
   adminPassword?: string
   adminPasswordHash?: string
+}
+
+export interface HomepageSlide {
+  image: string
+  title?: string
+  description?: string
 }
 
 export interface AdminAuthState {
