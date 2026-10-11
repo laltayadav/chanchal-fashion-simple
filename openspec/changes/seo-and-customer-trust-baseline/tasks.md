@@ -22,7 +22,7 @@
 ## 4. Search Operations and Validation
 
 - [x] 4.1 Document owner-run Search Console verification and sitemap submission; keep account credentials outside the repository.
-- [ ] 4.2 Run post-deploy checks for robots, sitemap, canonical URLs, and schema validity.
+- [x] 4.2 Run post-deploy checks for robots, sitemap, canonical URLs, and schema validity.
 - [x] 4.3 Run full `npm run test` and `npm run build`.
 - [x] 4.4 Verify existing product CRUD, order CRUD, admin settings/config writes, core route responses, and navigation targets; any regression blocks release.
 - [x] 4.5 Document indexing/trust rollout status, verified business-content inputs, and rollback steps.
